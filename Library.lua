@@ -1,6 +1,7 @@
-print("Version: 0.2 | 12/3/2024 | 11:14")
+print("Version: 0.3 | 12/7/2024 | 12:10")
 
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
 ScreenGui.Enabled = false
@@ -12,17 +13,21 @@ else
 end
 
 local Library = {
-	sizeX = 700,
+	sizeX = 800,
 	sizeY = 600,
-	tabSizeX = 208,
-	mobile = false,
+	tabSizeX = 200,
 	dragging = false,
+	sliderDragging = false,
 	firstTabDebounce = false,
 	firstSubTabDebounce = false,
 	processedEvent = false,
 	lineIndex = 0,
 	Connections = {},
 	Exclusions = {},
+	SectionFolder = {
+		Left = {},
+		Right = {},
+	},
 	Theme = {},
 	DropdownSizes = {}, -- to store previous opened dropdown size to resize scrollingFrame canvassize
 }
@@ -57,8 +62,56 @@ local Background = Glow.Background
 
 local Tabs = Background.Tabs
 local Filler = Tabs.Filler
+local Resize = Filler.Resize
 local Line = Filler.Line
 local Title = Tabs.Frame.Title
+
+-- Tab resizing stuff
+local tabResizing = false
+Resize.MouseButton1Down:Connect(function()
+	tabResizing = true
+end)
+
+local inputChanged = UserInputService.InputChanged:Connect(function(input)
+	if tabResizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local newSizeX = math.clamp(((input.Position.X - Glow.AbsolutePosition.X) / Glow.AbsoluteSize.X) * Glow.AbsoluteSize.X, 72, Glow.AbsoluteSize.X)
+		Utility:tween(Tabs, {Size = UDim2.new(0, newSizeX, 1, 0)}, 0.2):Play()
+		Utility:tween(Background.Pages, {Size = UDim2.new(1, -newSizeX, 1, 0)}, 0.2):Play()
+	end
+end)
+
+table.insert(Connections, inputChanged)
+
+Resize.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		tabResizing = false
+	end
+end)
+
+-- Mobile compatibility
+Glow:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+	for _, data in ipairs(Library.SectionFolder.Right) do
+		if Glow.AbsoluteSize.X <= 660 then
+			data.folders.Right.Visible = false
+			data.folders.Left.Size = UDim2.fromScale(1, 1)
+			data.object.Parent = data.folders.Left
+		else
+			data.folders.Left.Size = UDim2.new(0.5, -7, 1, 0)
+			data.folders.Right.Visible = true
+			data.object.Parent = data.folders.Right
+		end
+	end
+	
+	for _, data in ipairs(Library.SectionFolder.Left) do
+		if Glow.AbsoluteSize.X <= 660 then
+			data.folders.Right.Visible = false
+			data.folders.Left.Size = UDim2.fromScale(1, 1)
+		else
+			data.folders.Left.Size = UDim2.new(0.5, -7, 1, 0)
+			data.folders.Right.Visible = true
+		end
+	end
+end)
 
 Theme:registerToObjects({
 	{object = Glow, property = "ImageColor3", theme = {"PrimaryBackgroundColor"}},
@@ -75,10 +128,8 @@ function Library.new(options)
 		sizeX = {Default = Library.sizeX, ExpectedType = "number"},
 		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
 		tabSizeX = {Default = Library.tabSizeX, ExpectedType = "number"},
-		mobile = {Default = false, ExpectedType = "boolean"},
 	})
 
-	Library.mobile = options.mobile
 	Library.tabSizeX = options.tabSizeX
 	Library.sizeX = options.sizeX
 	Library.sizeY = options.sizeY
@@ -458,18 +509,31 @@ function Library:createSection(options: table)
 		text = {Default = "Section", ExpectedType = "string"},
 		position = {Default = "Left", ExpectedType = "string"},
 	})
-
-	-- Change section style 
-	local screenSize = workspace.CurrentCamera.ViewportSize
-	if self.sectionStyle == "Single" or self.mobile or (screenSize.AbsoluteSize.X <= 740 and screenSize.AbsoluteSize.Y <= 600) or (self.sizeX <= 740 and self.sizeY <= 600)  then
-		self.Right.Visible = false
-		self.Left.Size = UDim2.fromScale(1, 1)
-		options.position = "Left"
-	end
 		
 	local Section = Assets.Pages.Section:Clone()
 	Section.Visible = true
 	Section.Parent = self[options.position]
+
+	-- Change section style 
+	local screenSize = workspace.CurrentCamera.ViewportSize
+	if self.sectionStyle == "Single" or (screenSize.X <= 740 and screenSize.Y <= 590) or self.sizeX <= 660 then
+		if (options.position == "Right") then
+			table.insert(self.SectionFolder.Right, {folders = {Left = self.Left, Right = self.Right}, object = Section})
+		end
+		
+		self.Right.Visible = false
+		self.Left.Size = UDim2.fromScale(1, 1)
+		Section.Parent = self.Left
+	end
+
+	-- Store objects to change section style depending on the size of the UI
+	if (options.position == "Right" and self.sectionStyle ~= "Single") then
+		table.insert(self.SectionFolder.Right, {folders = {Left = self.Left, Right = self.Right}, object = Section})
+	end
+
+	if (options.position == "Left" and self.sectionStyle ~= "Single") then
+		table.insert(self.SectionFolder.Left, {folders = {Left = self.Left, Right = self.Right}, object = Section})
+	end
 	
 	local Inner = Section.Inner
 
@@ -601,6 +665,7 @@ function Library:createSlider(options: table, parent, scrollingFrame)
 		callback = {Value = options.callback, ExpectedType = "function"},
 		Line = {Value = Line, ExpectedType = "Instance"},
 		TextBox = {Value = TextLabel.TextBox, ExpectedType = "Instance"},
+		Library = {Value = Library, ExpectedType = "table"},
 		CurrentValueLabel = {Value = CurrentValueLabel, ExpectedType = "Instance"},
 		Connections = {Value = Connections, ExpectedType = "table"},
 
@@ -1013,6 +1078,52 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 		updateKeybind = function(self, options: table)
 			Keybind:updateKeybind(options)
 		end,
+	})
+end
+
+-- Rushed this, later put it into a module like the other elements, even though it's simple.
+function Library:createButton(options: table, parent, scrollingFrame)
+	Utility:validateOptions(options, {
+		text = {Default = "Button", ExpectedType = "string"},
+		callback = {Default = function() end, ExpectedType = "function"},
+	})
+	
+	scrollingFrame = self.ScrollingFrame or scrollingFrame
+	
+	local Button = Assets.Elements.Button:Clone()
+	Button.Visible = true
+	Button.Parent = parent or self.Section
+		
+	local Background = Button.Background
+	
+	local TextButton = Background.TextButton
+	TextButton.Text = options.text
+	
+	TextButton.MouseButton1Down:Connect(function() 
+		Utility:tween(Background, {BackgroundTransparency = 0}, 0.2):Play()
+		Utility:tween(TextButton, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0}, 0.2):Play()
+		
+		task.delay(0.2, function()
+			Utility:tween(TextButton, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+			Utility:tween(Background, {BackgroundTransparency = 0.3}, 0.2):Play()
+		end)
+		
+		options.callback() 
+	end)
+	
+	Background.InputBegan:Connect(function(input)
+		Utility:tween(Background, {BackgroundTransparency = 0.3}, 0.2):Play()
+		Utility:tween(TextButton, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0.3}, 0.2):Play()
+	end)
+	
+	Background.MouseLeave:Connect(function()
+		Utility:tween(Background, {BackgroundTransparency = 0}, 0.2):Play()
+		Utility:tween(TextButton, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+	end)
+	
+	Theme:registerToObjects({
+		{object = Background, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
+		{object = TextButton, property = "TextColor3", theme = {"SecondaryTextColor"}},
 	})
 end
 

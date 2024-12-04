@@ -37,6 +37,7 @@ function Slider:handleSlider(connections)
 	-- should probably do a check if the line has a textbutton or not, for more universal
 	self.Line.TextButton.MouseButton1Down:Connect(function(input)
 		self.dragging = true
+		self.Library.sliderDragging = true
 
 		local inputChanged = UserInputService.InputChanged:Connect(function(input)
 			if self.dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -52,10 +53,10 @@ function Slider:handleSlider(connections)
 		local inputEnded; inputEnded = UserInputService.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				self.dragging = false
+				self.Library.sliderDragging = false
 				self.dontShowInfo()
 				inputEnded:Disconnect()
 				inputChanged:Disconnect()
-				print("disconnected userinputservice events")
 			end
 		end)
 		

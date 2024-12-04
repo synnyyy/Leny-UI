@@ -9,18 +9,26 @@ function Popup.new(context: table)
 
 	-- Auto size popup
 	self.ScrollingFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		if self.ScrollingFrame.Right.Visible then
+			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		else
+			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.75, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		end
 	end)
 
 	self.Popup.Inner.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		if self.ScrollingFrame.Right.Visible then
+			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		else
+			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.75, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+		end
 	end)
 
 	-- Hide popup if it goes above the absolutewindowsize of scrollingframe when scrolling
 	self.Popup:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
 		local relativePosY = (self.Popup.AbsolutePosition.Y - self.ScrollingFrame.AbsolutePosition.Y) / self.ScrollingFrame.AbsoluteWindowSize.Y
 
-		if relativePosY <= 0 then
+		if relativePosY < 0 or relativePosY > 1 then
 			self:showPopup(false, 1, 0.2)
 		end
 	end)
@@ -36,7 +44,7 @@ end
 
 function Popup:hidePopupWhenClickingOutside()
 	-- If person clicks outside of ui then hide popup
-	local inputBegan = UserInputService.InputBegan:Connect(function(input)
+	local inputBegan = UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
 		-- Since dropdown isn't part of popup absolutesize we need to make sure we add the sizing if someone opened the dropdown list
 		local addDropdownPadding = 0
 		for _, v in ipairs(self.Popup:GetDescendants()) do
@@ -45,12 +53,14 @@ function Popup:hidePopupWhenClickingOutside()
 			end
 		end
 		
-		local widthPercent = (input.Position.X - self.Popup.AbsolutePosition.X) / self.Popup.AbsoluteSize.X
-		local lengthPercent = (input.Position.Y - self.Popup.AbsolutePosition.Y) / self.Popup.AbsoluteSize.Y + addDropdownPadding
-
-		if widthPercent < 0 or widthPercent > 1 or lengthPercent < 0 or lengthPercent > 1 then
-			if not self.Library.dragging and self.Popup.BackgroundTransparency == 0 then
-				self:showPopup(false, 1, 0.2)		
+		if not gameProcessedEvent and input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local widthPercent = (input.Position.X - self.Popup.AbsolutePosition.X) / self.Popup.AbsoluteSize.X
+			local lengthPercent = (input.Position.Y - self.Popup.AbsolutePosition.Y) / (self.Popup.AbsoluteSize.Y + addDropdownPadding)	
+			
+			if widthPercent < 0 or widthPercent > 1 or lengthPercent < 0 or lengthPercent > 1 then
+				if not self.Library.dragging and not self.Library.sliderDragging and self.Popup.BackgroundTransparency == 0 then
+					self:showPopup(false, 1, 0.2)		
+				end
 			end
 		end
 	end)
