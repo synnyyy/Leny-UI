@@ -32,8 +32,8 @@ function Keybind:handleKeybind()
 		self.TextButton.Text = "Changing..."
 	end)
 
-	local inputBegan = UserInputService.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Keyboard then
+	local inputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+		if not gameProcessedEvent and input.UserInputType == Enum.UserInputType.Keyboard then
 			if changingBind and (not table.find(self.Exclusions, input.KeyCode.Name)) then
 				self.TextButton.Text = input.KeyCode.Name
 				table.insert(self.Exclusions, input.KeyCode.Name)
@@ -56,8 +56,8 @@ function Keybind:handleKeybind()
 		end
 	end)
 
-	local inputEnded = UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.Keyboard and self.onHeld and input.KeyCode.Name == self.TextButton.Text then
+	local inputEnded = UserInputService.InputEnded:Connect(function(input, gameProccesedEvent)
+		if not gameProccesedEvent and input.UserInputType == Enum.UserInputType.Keyboard and self.onHeld and input.KeyCode.Name == self.TextButton.Text then
 			self.onHeldDebounce = false
 		end
 	end)

@@ -1,5 +1,9 @@
+print("Version: 0.2 | 12/3/2024 | 11:14")
+
 local RunService = game:GetService("RunService")
+
 local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
+ScreenGui.Enabled = false
 
 if RunService:IsStudio() then
 	ScreenGui.Parent = game.StarterGui
@@ -8,6 +12,11 @@ else
 end
 
 local Library = {
+	sizeX = 700,
+	sizeY = 600,
+	tabSizeX = 208,
+	mobile = false,
+	dragging = false,
 	firstTabDebounce = false,
 	firstSubTabDebounce = false,
 	processedEvent = false,
@@ -24,22 +33,26 @@ local Exclusions = Library.Exclusions
 
 local Assets = ScreenGui.Assets
 local Modules = {
-	Dropdown = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Dropdown.lua", true))(),
-	Toggle = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Toggle.lua", true))(),
-	Popup = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Popup.lua", true))(),
-	Slider = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Slider.lua", true))(),
-	Keybind = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Keybind.lua", true))(),
-	TextBox = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/TextBox.lua", true))(),
-	Navigation = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Navigation.lua", true))(),
-	ColorPicker = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
+	Dropdown = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Dropdown.lua", true))(),
+	Toggle = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Toggle.lua", true))(),
+	Popup = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Popup.lua", true))(),
+	Slider = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Slider.lua", true))(),
+	Keybind = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Keybind.lua", true))(),
+	TextBox = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/TextBox.lua", true))(),
+	Navigation = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Navigation.lua", true))(),
+	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
 }
 
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
-local Theme = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
+local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
+local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
 Library.Theme = Theme
 
 local Popups = ScreenGui.Popups
+
+-- Set default size for UI
 local Glow = ScreenGui.Glow
+Glow.Size = UDim2.fromOffset(Library.sizeX, Library.sizeY)
+
 local Background = Glow.Background
 
 local Tabs = Background.Tabs
@@ -57,6 +70,23 @@ Theme:registerToObjects({
 	{object = Assets.Pages.Fade, property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
 })
 
+function Library.new(options)
+	Utility:validateOptions(options, {
+		sizeX = {Default = Library.sizeX, ExpectedType = "number"},
+		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
+		tabSizeX = {Default = Library.tabSizeX, ExpectedType = "number"},
+		mobile = {Default = false, ExpectedType = "boolean"},
+	})
+
+	Library.mobile = options.mobile
+	Library.tabSizeX = options.tabSizeX
+	Library.sizeX = options.sizeX
+	Library.sizeY = options.sizeY
+
+	ScreenGui.Enabled = true
+	Glow.Size = UDim2.fromOffset(options.sizeX, options.sizeY)
+end
+
 function Library:createAddons(text, imageButton, scrollingFrame, additionalAddons)	
 	local Addon = Assets.Elements.Addons:Clone()
 	Addon.Size = UDim2.fromOffset(scrollingFrame.AbsoluteSize.X * 0.5, Addon.Inner.UIListLayout.AbsoluteContentSize.Y)
@@ -70,6 +100,7 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 	local PopupContext = Utility:validateContext({
 		Popup = {Value = Addon, ExpectedType = "Instance"},
 		Target = {Value = imageButton, ExpectedType = "Instance"},
+		Library = {Value = Library, ExpectedType = "table"},
 		TransparentObjects = {Value = Utility:getTransparentObjects(Addon), ExpectedType = "table"},
 		ScrollingFrame = {Value = scrollingFrame, ExpectedType = "Instance"},
 		Popups = {Value = Popups, ExpectedType = "Instance"},
@@ -86,6 +117,7 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 	
     local Popup = Modules.Popup.new(PopupContext)
 	imageButton.MouseButton1Down:Connect(Popup:togglePopup())
+	Popup:hidePopupWhenClickingOutside()
 
 	local DefaultAddons = {
 		createToggle = function(self, options)
@@ -181,6 +213,10 @@ function Library:createTab(options: table)
 		text = {Default = "Tab", ExpectedType = "string"},
 		icon = {Default = "124718082122263", ExpectedType = "string"},
 	})
+
+	-- Change tab size depending on Library.tabSizeX, maybe make resizer for tabs later
+	Background.Tabs.Size = UDim2.new(0, Library.tabSizeX, 1, 0)
+	Background.Pages.Size = UDim2.new(1, -Library.tabSizeX, 1, 0)
 
 	local ScrollingFrame = Background.Tabs.Frame.ScrollingFrame
 
@@ -305,6 +341,7 @@ end
 function Library:createSubTab(options: table)
 	-- Use provided options, or fall back to defaults if not provided	
 	Utility:validateOptions(options, {
+		sectionStyle = {Default = "Double", ExpectedType = "string"},
 		text = {Default = "SubTab", ExpectedType = "string"},
 	})
 
@@ -412,7 +449,7 @@ function Library:createSubTab(options: table)
 		{object = SubPage.ScrollingFrame, property = "ScrollBarImageColor3", theme = {"ScrollingBarImageColor"}}
 	}, "SubTab")
 
-	local PassingContext = setmetatable({Left = Left, Right = Right}, Library)
+	local PassingContext = setmetatable({Left = Left, Right = Right, sectionStyle = options.sectionStyle}, Library)
 	return PassingContext
 end
 
@@ -422,6 +459,14 @@ function Library:createSection(options: table)
 		position = {Default = "Left", ExpectedType = "string"},
 	})
 
+	-- Change section style 
+	local screenSize = workspace.CurrentCamera.ViewportSize
+	if self.sectionStyle == "Single" or self.mobile or (screenSize.AbsoluteSize.X <= 740 and screenSize.AbsoluteSize.Y <= 600) or (self.sizeX <= 740 and self.sizeY <= 600)  then
+		self.Right.Visible = false
+		self.Left.Size = UDim2.fromScale(1, 1)
+		options.position = "Left"
+	end
+		
 	local Section = Assets.Pages.Section:Clone()
 	Section.Visible = true
 	Section.Parent = self[options.position]
@@ -655,7 +700,7 @@ function Library:createPicker(options: table, scrollingFrame)
 		Popups = {Value = Popups, ExpectedType = "Instance"},
 		ScrollingFrame = {Value = scrollingFrame, ExpectedType = "Instance"},
 		PositionPadding = {Value = 18 + 7, ExpectedType = "number"},
-		Connections = {Value = Connections, ExpectedType = "table"},
+		Library = {Value = Library, ExpectedType = "table"},
 		SizePadding = {Value = 14, ExpectedType = "number"},
 	})
 	
@@ -1133,7 +1178,7 @@ function Library:notify(options: table)
 end
 
 -- Make UI Draggable and Resizable
-Utility:draggable(Connections, Glow)
-Utility:resizable(Connections, Glow.Background.Pages.Resize, Glow)
+Utility:draggable(Library, Glow)
+Utility:resizable(Library, Glow.Background.Pages.Resize, Glow)
 
 return Library

@@ -1,7 +1,8 @@
 local Popup = {}
 Popup.__index = Popup
 
-local Utility = loadstring(game:HttpGet("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
+local UserInputService = game:GetService("UserInputService")
+local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
 
 function Popup.new(context: table)
 	local self = setmetatable(context, Popup)
@@ -31,6 +32,30 @@ function Popup.new(context: table)
 	end)
 
 	return self
+end
+
+function Popup:hidePopupWhenClickingOutside()
+	-- If person clicks outside of ui then hide popup
+	local inputBegan = UserInputService.InputBegan:Connect(function(input)
+		-- Since dropdown isn't part of popup absolutesize we need to make sure we add the sizing if someone opened the dropdown list
+		local addDropdownPadding = 0
+		for _, v in ipairs(self.Popup:GetDescendants()) do
+			if v.Name == "List" and v.Size.Y.Offset > 0 then
+				addDropdownPadding = v.Size.Y.Offset
+			end
+		end
+		
+		local widthPercent = (input.Position.X - self.Popup.AbsolutePosition.X) / self.Popup.AbsoluteSize.X
+		local lengthPercent = (input.Position.Y - self.Popup.AbsolutePosition.Y) / self.Popup.AbsoluteSize.Y + addDropdownPadding
+
+		if widthPercent < 0 or widthPercent > 1 or lengthPercent < 0 or lengthPercent > 1 then
+			if not self.Library.dragging and self.Popup.BackgroundTransparency == 0 then
+				self:showPopup(false, 1, 0.2)		
+			end
+		end
+	end)
+	
+	table.insert(self.Library.Connections, inputBegan)
 end
 
 function Popup:togglePopup()

@@ -19,7 +19,7 @@ local Theme = {
 	SecondaryTextColor = Color3.fromRGB(125, 146, 173),
 	PrimaryColor = Color3.fromRGB(120, 163, 255),
 	ScrollingBarImageColor = Color3.fromRGB(151, 151, 172),
-	Line = Color3.fromRGB(35, 38, 45),
+	Line = Color3.fromRGB(38, 41, 49),
 }
 
 local ThemeObjects = {}

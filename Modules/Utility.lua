@@ -73,7 +73,7 @@ function Utility:validateKeys(context: table, requiredKeys: table)
 	end
 end
 
-local function dragging(connectionsTable, ui, uiForResizing, callback)
+local function dragging(library: table, ui: Instance, uiForResizing: Instance, callback)
 	local dragging, dragInput, dragStartPosition, currentUIPosition, currentUISizeForUIResizing
 	local eventNameToEnableDrag = "InputBegan"
 
@@ -90,6 +90,7 @@ local function dragging(connectionsTable, ui, uiForResizing, callback)
 
 	local function setInitialPositionsAndSize(initialDragStartPosition)
 		dragging = true
+		library.dragging = true
 		dragStartPosition = initialDragStartPosition
 		currentUIPosition = ui.Position
 
@@ -100,7 +101,6 @@ local function dragging(connectionsTable, ui, uiForResizing, callback)
 
 	local enableDrag = function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
 			setInitialPositionsAndSize(input.Position)
 		end
 	end
@@ -109,7 +109,6 @@ local function dragging(connectionsTable, ui, uiForResizing, callback)
 		eventNameToEnableDrag = "MouseButton1Down"
 
 		enableDrag = function()
-			dragging = true
 			setInitialPositionsAndSize(UserInputService:GetMouseLocation())
 		end
 	end
@@ -117,6 +116,7 @@ local function dragging(connectionsTable, ui, uiForResizing, callback)
 	local function disableDrag(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
+			library.dragging = false
 		end
 	end
 
@@ -126,22 +126,19 @@ local function dragging(connectionsTable, ui, uiForResizing, callback)
 		end
 	end
 	
-	local inputBegan = ui[eventNameToEnableDrag]:Connect(enableDrag)
-	local inputChanged = UserInputService.InputChanged:Connect(handleUpdate)
-	local inputEnded = UserInputService.InputEnded:Connect(disableDrag)
-	table.insert(connectionsTable, inputBegan)
-	table.insert(connectionsTable, inputChanged)
-	table.insert(connectionsTable, inputEnded)
+	table.insert(library.Connections, ui[eventNameToEnableDrag]:Connect(enableDrag))
+	table.insert(library.Connections, UserInputService.InputChanged:Connect(handleUpdate))
+	table.insert(library.Connections, UserInputService.InputEnded:Connect(disableDrag))
 end
 
-function Utility:draggable(connectionsTable, uiToEnableDrag)
-	dragging(connectionsTable, uiToEnableDrag, nil, function(delta, ui, currentUIPosition)
+function Utility:draggable(library: table, uiToEnableDrag: Instance)
+	dragging(library, uiToEnableDrag, nil, function(delta, ui, currentUIPosition)
 		self:tween(ui, {Position = UDim2.new(currentUIPosition.X.Scale, currentUIPosition.X.Offset + delta.X, currentUIPosition.Y.Scale, currentUIPosition.Y.Offset + delta.Y)}, 0.15):Play()
 	end)
 end
 
-function Utility:resizable(connectionsTable, uiToEnableDrag, uiToResize)
-	dragging(connectionsTable, uiToEnableDrag, uiToResize, function(delta, ui, currentUIPosition, currentUISizeForUIResizing)
+function Utility:resizable(library: table, uiToEnableDrag: Instance, uiToResize: Instance)
+	dragging(library, uiToEnableDrag, uiToResize, function(delta, ui, currentUIPosition, currentUISizeForUIResizing)
 		self:tween(uiToResize, {Size = UDim2.fromOffset(currentUISizeForUIResizing.X.Offset + delta.X, currentUISizeForUIResizing.Y.Offset + delta.Y)}, 0.15):Play()
 	end)
 end

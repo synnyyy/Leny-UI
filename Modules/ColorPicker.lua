@@ -54,15 +54,6 @@ function ColorPicker:handleColorPicker(connections)
 					self:updateDragPositions()
 				end
 			end
-			
-			local widthPercent = (input.Position.X - self.ColorPicker.AbsolutePosition.X) / self.ColorPicker.AbsoluteSize.X
-			local lengthPercent = (input.Position.Y - self.ColorPicker.AbsolutePosition.Y) / self.ColorPicker.AbsoluteSize.Y
-
-			if widthPercent < 0 or widthPercent > 1 or lengthPercent < 0 or lengthPercent > 1 then
-				if self.ColorPicker.BackgroundTransparency == 0 then
-					self.hidePopup()
-				end
-			end
 		end
 	end)
 
