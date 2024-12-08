@@ -3,6 +3,7 @@ Dropdown.__index = Dropdown
 
 function Dropdown.new(context: table)
 	local self = setmetatable(context, Dropdown)
+	self.value = self.default
 	self.multipleTable = {}
 	-- validatekeys later
 	return self
@@ -88,7 +89,11 @@ function Dropdown:updateList(options: table)
 	self.list = options.list or {}
 	self.default = options.default or {}
 	self.multipleTable = {}
-	self:handleDropdown(self)
+	self:handleDropdown()
+end
+
+function Dropdown:getValue()
+	return self.value
 end
 
 return Dropdown

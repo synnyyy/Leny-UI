@@ -1,4 +1,4 @@
-print("Version: 0.3 | 12/7/2024 | 12:10")
+print("Version: test release | 12/10/2024 | 8:04")
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +9,7 @@ ScreenGui.Enabled = false
 if RunService:IsStudio() then
 	ScreenGui.Parent = game.StarterGui
 else
-	ScreenGui.Parent = game.CoreGui
+	ScreenGui.Parent = cloneref(game.CoreGui)
 end
 
 local Library = {
@@ -19,7 +19,7 @@ local Library = {
 	dragging = false,
 	sliderDragging = false,
 	firstTabDebounce = false,
-	firstSubTabDebounce = false,
+	firstSubTabDebounce = false, 
 	processedEvent = false,
 	lineIndex = 0,
 	Connections = {},
@@ -28,10 +28,19 @@ local Library = {
 		Left = {},
 		Right = {},
 	},
+	Flags = {
+		Toggle = {},
+		Slider = {},
+		TextBox = {},
+		Keybind = {},
+		Dropdown = {},	
+	},
 	Theme = {},
 	DropdownSizes = {}, -- to store previous opened dropdown size to resize scrollingFrame canvassize
 }
 Library.__index = Library
+
+shared.Flags = Library.Flags
 
 local Connections = Library.Connections
 local Exclusions = Library.Exclusions
@@ -72,11 +81,25 @@ Resize.MouseButton1Down:Connect(function()
 	tabResizing = true
 end)
 
+local touchMoved = UserInputService.TouchMoved:Connect(function()
+	if tabResizing then
+		local newSizeX = math.clamp(((input.Position.X - Glow.AbsolutePosition.X) / Glow.AbsoluteSize.X) * Glow.AbsoluteSize.X, 72, Glow.AbsoluteSize.X)
+		Utility:tween(Tabs, {Size = UDim2.new(0, newSizeX, 1, 0)}, 0.2):Play()
+		Utility:tween(Background.Pages, {Size = UDim2.new(1, -newSizeX, 1, 0)}, 0.2):Play()
+	end
+end)
+
 local inputChanged = UserInputService.InputChanged:Connect(function(input)
 	if tabResizing and input.UserInputType == Enum.UserInputType.MouseMovement then
 		local newSizeX = math.clamp(((input.Position.X - Glow.AbsolutePosition.X) / Glow.AbsoluteSize.X) * Glow.AbsoluteSize.X, 72, Glow.AbsoluteSize.X)
 		Utility:tween(Tabs, {Size = UDim2.new(0, newSizeX, 1, 0)}, 0.2):Play()
 		Utility:tween(Background.Pages, {Size = UDim2.new(1, -newSizeX, 1, 0)}, 0.2):Play()
+	end
+end)
+
+local touchEnded = UserInputService.TouchEnded:Connect(function(input)
+	if tabResizing then
+		tabResizing = false
 	end
 end)
 
@@ -112,16 +135,6 @@ Glow:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		end
 	end
 end)
-
-Theme:registerToObjects({
-	{object = Glow, property = "ImageColor3", theme = {"PrimaryBackgroundColor"}},
-	{object = Background, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
-	{object = Line , property = "BackgroundColor3", theme = {"Line"}},
-	{object = Tabs , property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
-	{object = Filler , property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
-	{object = Title , property = "TextColor3", theme = {"PrimaryTextColor"}},
-	{object = Assets.Pages.Fade, property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
-})
 
 function Library.new(options)
 	Utility:validateOptions(options, {
@@ -168,7 +181,7 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 	
     local Popup = Modules.Popup.new(PopupContext)
 	imageButton.MouseButton1Down:Connect(Popup:togglePopup())
-	Popup:hidePopupWhenClickingOutside()
+	Popup:hidePopupOnClickingOutside()
 
 	local DefaultAddons = {
 		createToggle = function(self, options)
@@ -609,15 +622,19 @@ function Library:createToggle(options: table, parent, scrollingFrame)
 		{object = ImageButton, property = "ImageColor3", theme = {"SecondaryTextColor"}},
 	})
 	
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getState = function(self)
 			return Context.state
 		end,
-		
+
 		updateState = function(self, options: table)
 			Toggle:updateState(options)
 		end,
 	})
+
+	shared.Flags.Toggle[options.text] = Addons
+
+	return Addons
 end
 
 function Library:createSlider(options: table, parent, scrollingFrame)
@@ -708,15 +725,17 @@ function Library:createSlider(options: table, parent, scrollingFrame)
 	InnerCircle.BackgroundColor3 = Theme.TertiaryBackgroundColor
 	CurrentValueLabel.BackgroundColor3 = Theme.PrimaryColor
 	
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getValue = function(self)
 			return Context.value
 		end,
-		
+
 		updateValue = function(self, options: table)
 			Slider:updateValue(options)
 		end,
 	})
+
+	shared.Flags.Slider[options.text] = Addons
 end
 
 function Library:createPicker(options: table, scrollingFrame)
@@ -1000,15 +1019,23 @@ function Library:createDropdown(options: table, parent, scrollingFrame)
 	Box.BackgroundColor3 = Theme.SecondaryBackgroundColor
 	Search.BackgroundColor3 = Theme.SecondaryBackgroundColor
 
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
-		getList = function(self)
+	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+		getList = function()
 			return Context.list
+		end,
+
+		getValue = function()
+			return Dropdown:getValue()	
 		end,
 
 		updateList = function(self, options: table)
 			Dropdown:updateList(options)
 		end,
 	})
+
+	shared.Flags.Dropdown[options.text] = Addons
+
+	return Addons
 end
 
 function Library:createKeybind(options: table, parent, scrollingFrame)
@@ -1070,7 +1097,7 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 		{object = TextButton, property = "TextColor3", theme = {"SecondaryTextColor"}}
 	})
 	
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getKeybind = function(self)
 			return TextButton.Text
 		end,
@@ -1079,6 +1106,8 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 			Keybind:updateKeybind(options)
 		end,
 	})
+
+	shared.Flags.Keybind[options.text] = Addons
 end
 
 -- Rushed this, later put it into a module like the other elements, even though it's simple.
@@ -1169,7 +1198,7 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 		{object = Box, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
 	})
 	
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getText = function(self)
 			return Box.Text
 		end,
@@ -1179,6 +1208,10 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 			Context.callback(Box.Text)
 		end,
 	})
+
+	shared.Flags.TextBox[options.text] = Addons
+
+	return Addons
 end
 
 -- Later put this into a module, but this is fine if it's put here anyways.
@@ -1188,13 +1221,14 @@ function Library:notify(options: table)
 		title = {Default = "Notification", ExpectedType = "string"},
 		text = {Default = "Hello world", ExpectedType = "string"},
 		duration = {Default = 3, ExpectedType = "number"},
-		height = {Default = 100, ExpectedType = "number"},
+		scaleX = {Default = 0.165, ExpectedType = "number"},
+		sizeY = {Default = 100, ExpectedType = "number"},
 	})
 	
 	local Notification = Assets.Elements.Notification:Clone()
 	Notification.Visible = true
 	Notification.Parent = ScreenGui.Notifications
-	Notification.Size = UDim2.fromOffset(300, options.height)
+	Notification.Size = UDim2.new(options.scaleX, 0, 0, options.sizeY)
 	
 	local Title = Notification.Title
 	Title.Text = options.title
@@ -1226,7 +1260,7 @@ function Library:notify(options: table)
 	
 	for index, notification in ipairs(ScreenGui.Notifications:GetChildren()) do
 		if index == 1 then
-			notificationSize = notification.Size.Y.Offset
+			notificationSize = notification.AbsoluteSize.Y
 			Utility:tween(notification, {Position = UDim2.new(1, -24, 1, notificationPosition)}, 0.2):Play()
 			continue
 		end
@@ -1244,7 +1278,7 @@ function Library:notify(options: table)
 			for index, notification in ipairs(ScreenGui.Notifications:GetChildren()) do
 				if index == 1 then
 					notificationPosition = -14
-					notificationSize = notification.Size.Y.Offset
+					notificationSize = notification.AbsoluteSize.Y
 					Utility:tween(notification, {Position = UDim2.new(1, -24, 1, notificationPosition)}, 0.2):Play()
 					continue
 				end
@@ -1252,7 +1286,7 @@ function Library:notify(options: table)
 				-- Current notification position
 				notificationPosition -= notificationSize + PADDING_Y
 				-- Update notification size for next time to get proper position
-				notificationSize = notification.Size.Y.Offset
+				notificationSize = notification.AbsoluteSize.Y
 				Utility:tween(notification, {Position = UDim2.new(1, -24, 1, notificationPosition)}, 0.2):Play()
 			end
 		end)
@@ -1288,8 +1322,144 @@ function Library:notify(options: table)
 	})
 end
 
+-- Set users theme choice or default theme when initiliazed
+Library.Theme.PrimaryBackgroundColor = Library.Theme.PrimaryBackgroundColor
+Library.Theme.SecondaryBackgroundColor = Library.Theme.SecondaryBackgroundColor
+Library.Theme.TertiaryBackgroundColor = Library.Theme.TertiaryBackgroundColor -- new
+Library.Theme.TabBackgroundColor = Library.Theme.TabBackgroundColor
+Library.Theme.PrimaryTextColor = Library.Theme.PrimaryTextColor
+Library.Theme.SecondaryTextColor = Library.Theme.SecondaryTextColor
+Library.Theme.PrimaryColor = Library.Theme.PrimaryColor
+Library.Theme.ScrollingBarImageColor = Library.Theme.ScrollingBarImageColor
+Library.Theme.Line = Library.Theme.Line
+
+Theme:registerToObjects({
+	{object = Glow, property = "ImageColor3", theme = {"PrimaryBackgroundColor"}},
+	{object = Background, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
+	{object = Line , property = "BackgroundColor3", theme = {"Line"}},
+	{object = Tabs , property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
+	{object = Filler , property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
+	{object = Title , property = "TextColor3", theme = {"PrimaryTextColor"}},
+	{object = Assets.Pages.Fade, property = "BackgroundColor3", theme = {"PrimaryBackgroundColor"}},
+})
+
 -- Make UI Draggable and Resizable
 Utility:draggable(Library, Glow)
 Utility:resizable(Library, Glow.Background.Pages.Resize, Glow)
+
+-- Save Manager, Theme Manager, UI settings | WIP
+task.defer(function()
+	task.wait(5)
+	local UI = Library:createTab({text = "UI"})
+	local Page = UI:createSubTab({text = "Page 1"})
+	local UI = Page:createSection({text = "UI"})
+	local SaveManager = Page:createSection({position = "Right", text = "Save Manager (WIP)"})
+	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager (WIP)"})
+
+	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
+		Theme:setTheme("SecondaryTextColor", color)
+	end,})
+
+	UI:createPicker({text = "PrimaryTextColor", default = Theme.PrimaryTextColor, callback = function(color)
+		Theme:setTheme("PrimaryTextColor", color)
+	end,})
+	UI:createPicker({text = "PrimaryBackgroundColor", default = Theme.PrimaryBackgroundColor, callback = function(color)
+		Theme:setTheme("PrimaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "SecondaryBackgroundColor", default = Theme.SecondaryBackgroundColor, callback = function(color)
+		Theme:setTheme("SecondaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "TabBackgroundColor", default = Theme.TabBackgroundColor, callback = function(color)
+		Theme:setTheme("TabBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "PrimaryColor", default = Theme.PrimaryColor, callback = function(color)
+		Theme:setTheme("PrimaryColor", color)
+	end,})
+	UI:createPicker({text = "Outline", default = Theme.Line, callback = function(color)
+		Theme:setTheme("Line", color)
+	end,})
+	UI:createPicker({text = "TertiaryBackgroundColor", default = Theme.TertiaryBackgroundColor, callback = function(color)
+		Theme:setTheme("TertiaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
+		Theme:setTheme("SecondaryTextColor", color)
+	end,})
+	UI:createPicker({text = "ScrollingBarImageColor", default = Theme.ScrollingBarImageColor, callback = function(color)
+		Theme:setTheme("ScrollingBarImageColor", color)
+	end,})	
+
+	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
+
+	local configName = SaveManager:createTextBox({})
+	
+	if not isfolder("Leny") then
+		makefolder("Leny")
+	end
+
+	local Configs = SaveManager:createDropdown({text = "Configs", list = listfiles("Leny")})
+	SaveManager:createButton({text = "Save/Overwrite Config", callback = function()
+		local SavedData = {
+			Dropdown = {},
+			Toggle = {},
+			Keybind = {},
+			Slider = {},
+			TextBox = {},
+		}
+
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, addon in pairs(elementData) do
+				if elementType == "Dropdown" and typeof(addon) == "table" and addon.getList and addon.getValue then
+					SavedData.Dropdown[elementName] = {list = addon:getList(), value = addon:getValue()}
+				end
+
+				if elementType == "Toggle" and typeof(addon) == "table" and addon.getState then
+					SavedData.Toggle[elementName] = {state = addon:getState()}
+				end
+
+				if elementType == "Slider" and typeof(addon) == "table" and addon.getValue then
+					SavedData.Slider[elementName] = {value = addon:getValue()}
+				end
+
+				if elementType == "Keybind" and typeof(addon) == "table" and addon.getKeybind then
+					SavedData.Keybind[elementName] = {value = addon:getKeybind()}
+				end
+
+				if elementType == "TextBox" and typeof(addon) == "table" and addon.getText then
+					SavedData.TextBox[elementName] = {value = addon:getText()}
+				end
+			end
+		end
+
+		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		--[[local decoded = game:GetService("HttpService"):JSONDecode(encoded)
+
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, _ in pairs(elementData) do
+				if elementType == "Dropdown" and decoded.Dropdown[elementName] then
+					print(elementName, decoded.Dropdown[elementName])
+				end
+
+				if elementType == "Toggle" and decoded.Toggle[elementName] then
+					print(elementName, decoded.Toggle[elementName])
+				end
+
+				if elementType == "Slider" and decoded.Slider[elementName] then
+					print(elementName, decoded.Slider[elementName])
+				end
+
+				if elementType == "Keybind" and decoded.Keybind[elementName] then
+					print(elementName, decoded.Keybind[elementName])
+				end
+
+				if elementType == "TextBox" and decoded.TextBox[elementName] then
+					print(elementName, decoded.TextBox[elementName])
+				end
+			end
+		end--]]
+		
+		writefile("Leny/" .. configName:getText() .. ".json", encoded)
+		Configs:updateList({list = listfiles("Leny"), default = {Configs:getValue()}})
+	end,})
+end)
 
 return Library
