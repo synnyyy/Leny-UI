@@ -47,7 +47,7 @@ function Popup:hidePopupOnClickingOutside()
 	local inputBegan = UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
 		-- Since dropdown isn't part of popup absolutesize we need to make sure we add the sizing if someone opened the dropdown list
 		local addDropdownPadding = 0
-		for _, v in ipairs(self.Popup:GetDescendants()) do
+		for _, v in pairs(self.Popup:GetDescendants()) do
 			if v.Name == "List" and v.Size.Y.Offset > 0 then
 				addDropdownPadding = v.Size.Y.Offset
 			end
@@ -67,7 +67,7 @@ function Popup:hidePopupOnClickingOutside()
 	
 	local touchEnded = UserInputService.TouchEnded:Connect(function(input, gameProcessedEvent)
 		local addDropdownPadding = 0
-		for _, v in ipairs(self.Popup:GetDescendants()) do
+		for _, v in pairs(self.Popup:GetDescendants()) do
 			if v.Name == "List" and v.Size.Y.Offset > 0 then
 				addDropdownPadding = v.Size.Y.Offset
 			end
@@ -92,7 +92,11 @@ end
 function Popup:togglePopup()
 	return function()
 		if self.Popup.BackgroundTransparency >= 0.9 then
-			self:hidePopups(true)
+
+			if not self.isPicker then
+				self:hidePopups(true)
+			end
+
 			self:showPopup(true, 0, 0)
 		else
 			self:showPopup(false, 1, 0.2)		
@@ -107,13 +111,13 @@ end
 function Popup:hidePopups(objectCheck: boolean, popups)
 	popups = self.Popups or popups
 
-	for _, data in ipairs(Utility:getTransparentObjects(popups)) do
+	for _, data in pairs(Utility:getTransparentObjects(popups)) do
 		if (not objectCheck) or (objectCheck and data ~= self.Popup) then
 			Utility:tween(data.object, {[data.property] = 1}, 0.2):Play()
 		end
 	end
 
-	for _, popup in ipairs(popups:GetChildren()) do
+	for _, popup in pairs(popups:GetChildren()) do
 		if (not objectCheck) or (objectCheck and popup ~= self.Popup) then
 			task.delay(0.2, function()
 				popup.Visible = false
@@ -123,8 +127,20 @@ function Popup:hidePopups(objectCheck: boolean, popups)
 end
 
 function Popup:showPopup(boolean, transparency: number, delayTime: number)
-	for _, data in ipairs(self.TransparentObjects) do
+	for _, data in pairs(self.TransparentObjects) do
 		Utility:tween(data.object, {[data.property] = transparency}, 0.2):Play()
+	end
+
+	-- Hide color picker if it's an addon colorpicker (ex: toggle:createPicker({})) and not a popup one (ex: section:createPicker({}))
+	-- This works both ways anyways
+	for _, colorPicker in ipairs(self.Popup.Parent:GetChildren()) do
+		if colorPicker.Name == "ColorPicker" and colorPicker.Visible then
+			Utility:tween(colorPicker, {BackgroundTransparency = 1}, 0.2):Play()
+
+			for _, data in ipairs(Utility:getTransparentObjects(colorPicker)) do
+				Utility:tween(data.object, {[data.property] = 1}, 0.2):Play()
+			end
+		end
 	end
 
 	if self.Inner then
