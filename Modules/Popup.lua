@@ -92,7 +92,11 @@ end
 function Popup:togglePopup()
 	return function()
 		if self.Popup.BackgroundTransparency >= 0.9 then
-			self:hidePopups(true)
+
+			if not self.isPicker then
+				self:hidePopups(true)
+			end
+
 			self:showPopup(true, 0, 0)
 		else
 			self:showPopup(false, 1, 0.2)		
@@ -125,6 +129,18 @@ end
 function Popup:showPopup(boolean, transparency: number, delayTime: number)
 	for _, data in pairs(self.TransparentObjects) do
 		Utility:tween(data.object, {[data.property] = transparency}, 0.2):Play()
+	end
+
+	-- Hide color picker if it's an addon colorpicker (ex: toggle:createPicker({})) and not a popup one (ex: section:createPicker({}))
+	-- This works both ways anyways
+	for _, colorPicker in ipairs(self.Popup.Parent:GetChildren()) do
+		if colorPicker.Name == "ColorPicker" and colorPicker.Visible then
+			Utility:tween(colorPicker, {BackgroundTransparency = 1}, 0.2):Play()
+
+			for _, data in ipairs(Utility:getTransparentObjects(colorPicker)) do
+				Utility:tween(data.object, {[data.property] = 1}, 0.2):Play()
+			end
+		end
 	end
 
 	if self.Inner then

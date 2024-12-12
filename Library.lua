@@ -1,4 +1,4 @@
-print("Version: test release | 12/10/2024 | 8:04")
+print("Version: Version 0.5 | 12/11/2024 | 8:00")
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -34,6 +34,7 @@ local Library = {
 		TextBox = {},
 		Keybind = {},
 		Dropdown = {},	
+		ColorPicker = {},
 	},
 	Theme = {},
 	DropdownSizes = {}, -- to store previous opened dropdown size to resize scrollingFrame canvassize
@@ -141,6 +142,7 @@ function Library.new(options)
 		sizeX = {Default = Library.sizeX, ExpectedType = "number"},
 		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
 		tabSizeX = {Default = Library.tabSizeX, ExpectedType = "number"},
+		title = {Default = "Leny", ExpectedType = "string"},
 	})
 
 	Library.tabSizeX = options.tabSizeX
@@ -148,6 +150,7 @@ function Library.new(options)
 	Library.sizeY = options.sizeY
 
 	ScreenGui.Enabled = true
+	Title.Text = options.title
 	Glow.Size = UDim2.fromOffset(options.sizeX, options.sizeY)
 end
 
@@ -196,6 +199,10 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 			options.default = {} -- need to do this for some reason since I clearly implied that default was as table value but guess not?
 			Library:createDropdown(options, Addon.Inner, scrollingFrame)
 		end,
+
+		createPicker = function(self, options)
+			Library:createPicker(options, Addon.Inner, scrollingFrame, true)
+		end,
 	}
 
 	for key, value in pairs(additionalAddons or  {}) do
@@ -209,7 +216,7 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 			if type(originalFunction) == "function" then
 				return function(...)
 					-- Show imageButton if the index name is "create"
-					if string.match(key, "create") and not string.match(key, "createPicker") then
+					if string.match(key, "create") then
 						imageButton.Visible = true
 					end
 
@@ -621,8 +628,18 @@ function Library:createToggle(options: table, parent, scrollingFrame)
 		{object = Circle, property = "BackgroundColor3", theme = {"TertiaryBackgroundColor", "PrimaryBackgroundColor"}, circleOn = circleOn},
 		{object = ImageButton, property = "ImageColor3", theme = {"SecondaryTextColor"}},
 	})
-	
-	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+
+	shared.Flags.Toggle[options.text] = {
+		getState = function(self)
+			return Context.state
+		end,
+
+		updateState = function(self, options: table)
+			Toggle:updateState(options)
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getState = function(self)
 			return Context.state
 		end,
@@ -724,8 +741,18 @@ function Library:createSlider(options: table, parent, scrollingFrame)
 	Circle.BackgroundColor3 = Theme.PrimaryColor
 	InnerCircle.BackgroundColor3 = Theme.TertiaryBackgroundColor
 	CurrentValueLabel.BackgroundColor3 = Theme.PrimaryColor
-	
-	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+
+	shared.Flags.Slider[options.text] =  {
+		getValue = function(self)
+			return Context.value
+		end,
+
+		updateValue = function(self, options: table)
+			Slider:updateValue(options)
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getValue = function(self)
 			return Context.value
 		end,
@@ -738,7 +765,7 @@ function Library:createSlider(options: table, parent, scrollingFrame)
 	shared.Flags.Slider[options.text] = Addons
 end
 
-function Library:createPicker(options: table, scrollingFrame)
+function Library:createPicker(options: table, parent, scrollingFrame, isPickerBoolean)
 	Utility:validateOptions(options, {
 		text = {Default = "Picker", ExpectedType = "string"},
 		default = {Default = Color3.fromRGB(255, 0, 0), ExpectedType = "Color3"},
@@ -746,30 +773,31 @@ function Library:createPicker(options: table, scrollingFrame)
 		callback = {Default = function() end, ExpectedType = "function"},
 	})
 
+	isPickerBoolean = isPickerBoolean or false
 	options.color = options.default
 	scrollingFrame = self.ScrollingFrame or scrollingFrame
 
 	local Picker = Assets.Elements.Picker:Clone()
 	Picker.Visible = true
-	Picker.Parent = self.Section
+	Picker.Parent = parent or self.Section
 
 	local TextLabel = Picker.TextLabel
 	TextLabel.Text = options.text
-	
+
 	local ImageButton = TextLabel.ImageButton
 	local Background = TextLabel.Background
 	local TextButton = Background.TextButton
 
 	local ColorPicker = Assets.Elements.ColorPicker:Clone()
 	ColorPicker.Parent = Popups
-	
+
 	-- Put transparent objects to not be visible to make cool effect later!!
 	local ColorPickerTransparentObjects = Utility:getTransparentObjects(ColorPicker)
-	
+
 	for _, data in ipairs(ColorPickerTransparentObjects) do
 		data.object[data.property] = 1
 	end
-		
+
 	local Inner = ColorPicker.Inner
 	local HSV = Inner.HSV
 	local Slider = Inner.Slider
@@ -780,17 +808,19 @@ function Library:createPicker(options: table, scrollingFrame)
 	local PopupContext = Utility:validateContext({
 		Popup = {Value = ColorPicker, ExpectedType = "Instance"},
 		Target = {Value = Background, ExpectedType = "Instance"},
+		Library = {Value = Library, ExpectedType = "table"},
 		TransparentObjects = {Value = ColorPickerTransparentObjects, ExpectedType = "table"},
 		Popups = {Value = Popups, ExpectedType = "Instance"},
+		isPicker = {Value = isPickerBoolean, ExpectedType = "boolean"},
 		ScrollingFrame = {Value = scrollingFrame, ExpectedType = "Instance"},
 		PositionPadding = {Value = 18 + 7, ExpectedType = "number"},
-		Library = {Value = Library, ExpectedType = "table"},
+		Connections = {Value = Connections, ExpectedType = "table"},
 		SizePadding = {Value = 14, ExpectedType = "number"},
 	})
-	
+
 	local Popup = Modules.Popup.new(PopupContext)
 	TextButton.MouseButton1Down:Connect(Popup:togglePopup())
-	
+
 	local ColorPickerContext = Utility:validateContext({
 		ColorPicker = {Value = ColorPicker, ExpectedType = "Instance"},
 		Hex = {Value = Hex, ExpectedType = "Instance"},
@@ -800,11 +830,6 @@ function Library:createPicker(options: table, scrollingFrame)
 		Submit = {Value = Submit, ExpectedType = "Instance"},
 		Background = {Value = Background, ExpectedType = "Instance"},
 		Connections = {Value = Connections, ExpectedType = "table"},
-		
-		hidePopup = {Value = function()
-			Popup:showPopup(false, 1, 0.2)
-		end, ExpectedType = "function"},
-
 		color = {Value = options.color, ExpectedType = "Color3"},
 		callback = {Value = options.callback, ExpectedType = "function"},
 	})
@@ -819,10 +844,20 @@ function Library:createPicker(options: table, scrollingFrame)
 		{object = RGB, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
 		{object = Submit.TextLabel, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}}
 	})
-	
+
 	local ColorPicker = Modules.ColorPicker.new(ColorPickerContext)
 	ColorPicker:handleColorPicker()
-	
+
+	shared.Flags.ColorPicker[options.text] = {
+		getColor = function(self)
+			return ColorPickerContext.color
+		end,
+
+		updateColor = function(self, options: table)
+			ColorPicker:updateColor(options)
+		end,
+	}
+
 	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getColor = function(self)
 			return ColorPickerContext.color
@@ -1019,7 +1054,21 @@ function Library:createDropdown(options: table, parent, scrollingFrame)
 	Box.BackgroundColor3 = Theme.SecondaryBackgroundColor
 	Search.BackgroundColor3 = Theme.SecondaryBackgroundColor
 
-	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+	shared.Flags.Dropdown[options.text] = {
+		getList = function()
+			return Context.list
+		end,
+
+		getValue = function()
+			return Dropdown:getValue()	
+		end,
+
+		updateList = function(self, options: table)
+			Dropdown:updateList(options)
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getList = function()
 			return Context.list
 		end,
@@ -1097,7 +1146,17 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 		{object = TextButton, property = "TextColor3", theme = {"SecondaryTextColor"}}
 	})
 	
-	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+	shared.Flags.Keybind[options.text] = {
+		getKeybind = function(self)
+			return TextButton.Text
+		end,
+
+		updateKeybind = function(self, options: table)
+			Keybind:updateKeybind(options)
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getKeybind = function(self)
 			return TextButton.Text
 		end,
@@ -1197,8 +1256,19 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 		{object = Box, property = "TextColor3", theme = {"SecondaryTextColor"}},
 		{object = Box, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
 	})
-	
-	local Addons = self:createAddons(options.text, ImageButton, scrollingFrame, {
+
+	shared.Flags.TextBox[options.text] = {
+		getText = function(self)
+			return Box.Text
+		end,
+
+		updateText = function(self, options: table)
+			Box.Text = options.text or ""
+			Context.callback(Box.Text)
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
 		getText = function(self)
 			return Box.Text
 		end,
@@ -1322,7 +1392,176 @@ function Library:notify(options: table)
 	})
 end
 
--- Set users theme choice or default theme when initiliazed
+-- Save Manager, Theme Manager, UI settings | Working but still (WIP) | Messy ass hell since I'm rushing to release.
+function Library:createManager()
+	local UI = Library:createTab({text = "UI"})
+	local Page = UI:createSubTab({text = "Page 1"})
+	local UI = Page:createSection({text = "UI"})
+	local SaveManager = Page:createSection({position = "Right", text = "Save Manager (WIP, WORKS)"})
+	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager (WIP, WORKS)"})
+	
+	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
+		Theme:setTheme("SecondaryTextColor", color)
+	end,})
+	
+	UI:createPicker({text = "PrimaryTextColor", default = Theme.PrimaryTextColor, callback = function(color)
+		Theme:setTheme("PrimaryTextColor", color)
+	end,})
+	UI:createPicker({text = "PrimaryBackgroundColor", default = Theme.PrimaryBackgroundColor, callback = function(color)
+		Theme:setTheme("PrimaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "SecondaryBackgroundColor", default = Theme.SecondaryBackgroundColor, callback = function(color)
+		Theme:setTheme("SecondaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "TabBackgroundColor", default = Theme.TabBackgroundColor, callback = function(color)
+		Theme:setTheme("TabBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "PrimaryColor", default = Theme.PrimaryColor, callback = function(color)
+		Theme:setTheme("PrimaryColor", color)
+	end,})
+	UI:createPicker({text = "Outline", default = Theme.Line, callback = function(color)
+		Theme:setTheme("Line", color)
+	end,})
+	UI:createPicker({text = "TertiaryBackgroundColor", default = Theme.TertiaryBackgroundColor, callback = function(color)
+		Theme:setTheme("TertiaryBackgroundColor", color)
+	end,})
+	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
+		Theme:setTheme("SecondaryTextColor", color)
+	end,})
+	UI:createPicker({text = "ScrollingBarImageColor", default = Theme.ScrollingBarImageColor, callback = function(color)
+		Theme:setTheme("ScrollingBarImageColor", color)
+	end,})	
+	
+	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
+	
+	local configName = SaveManager:createTextBox({})
+	
+	if not isfolder("Leny") then
+		makefolder("Leny")
+	end
+
+	if not isfolder("Leny/Theme") then
+		makefolder("Leny/Theme")
+	end
+	
+	local Configs = SaveManager:createDropdown({text = "Configs", list = listfiles("Leny")})
+	SaveManager:createButton({text = "Save/Overwrite Config", callback = function()
+		local SavedData = {
+			Dropdown = {},
+			Toggle = {},
+			Keybind = {},
+			Slider = {},
+			TextBox = {},
+			ColorPicker = {},
+		}
+
+		local Excluded = {"Line", "PrimaryColor", "PrimaryTextColor", "SecondaryTextColor", "PrimaryBackgroundColor", "SecondaryBackgroundColor", "TertiaryBackgroundColor", "ScrollingBarImageColor", "TabBackgroundColor"}
+	
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, addon in pairs(elementData) do
+				if elementType == "Dropdown" and typeof(addon) == "table" and addon.getList and addon.getValue then
+					SavedData.Dropdown[elementName] = {list = addon:getList(), value = addon:getValue()}
+				end
+	
+				if elementType == "Toggle" and typeof(addon) == "table" and addon.getState then
+					SavedData.Toggle[elementName] = {state = addon:getState()}
+				end
+	
+				if elementType == "Slider" and typeof(addon) == "table" and addon.getValue then
+					SavedData.Slider[elementName] = {value = addon:getValue()}
+				end
+	
+				if elementType == "Keybind" and typeof(addon) == "table" and addon.getKeybind then
+					SavedData.Keybind[elementName] = {keybind = addon:getKeybind()}
+				end
+	
+				if elementType == "TextBox" and typeof(addon) == "table" and addon.getText then
+					SavedData.TextBox[elementName] = {text = addon:getText()}
+				end
+
+				if not table.find(Excluded, elementName) and elementType == "ColorPicker" and typeof(addon) == "table" and addon.getColor then
+					SavedData.ColorPicker[elementName] = {color = {addon:getColor().R * 255, addon:getColor().G * 255, addon:getColor().B * 255}}
+				end
+			end
+		end
+	
+		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		writefile("Leny/" .. configName:getText() .. ".json", encoded)
+		Configs:updateList({list = listfiles("Leny"), default = {Configs:getValue()}})
+	end,})
+
+	SaveManager:createButton({text = "Load Config", callback = function()
+		local decoded = game:GetService("HttpService"):JSONDecode(readfile(Configs:getValue()))
+
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, _ in pairs(elementData) do
+				if elementType == "Dropdown" and decoded.Dropdown[elementName] and elementName ~= "Configs" then
+					shared.Flags.Dropdown[elementName]:updateList({list = decoded.Dropdown.list, default = decoded.Dropdown.value})
+				end
+	
+				if elementType == "Toggle" and decoded.Toggle[elementName] then
+					shared.Flags.Toggle[elementName]:updateState({state = decoded.Toggle[elementName].state})
+				end
+	
+				if elementType == "Slider" and decoded.Slider[elementName] then
+					shared.Flags.Slider[elementName]:updateValue({value = decoded.Slider[elementName].value})
+				end
+	
+				if elementType == "Keybind" and decoded.Keybind[elementName] then
+					shared.Flags.Keybind[elementName]:updateKeybind({bind = decoded.Keybind[elementName].keybind})
+				end
+	
+				if elementType == "TextBox" and decoded.TextBox[elementName] then
+					shared.Flags.TextBox[elementName]:updateText({text = decoded.TextBox[elementName].text})
+				end
+
+				if elementType == "ColorPicker" and decoded.ColorPicker[elementName] then
+					shared.Flags.ColorPicker[elementName]:updateColor({color = Color3.fromRGB(unpack(decoded.ColorPicker[elementName].color))})
+				end
+			end
+		end
+	end})
+
+	local themeConfigName = ThemeManager:createTextBox({})
+	local ThemeConfigs = ThemeManager:createDropdown({text = "Theme Configs", list = listfiles("Leny/Theme")})
+
+	ThemeManager:createButton({text = "Save Theme Config", callback = function()
+		local SavedData = {
+			ColorPicker = {},
+		}
+	
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, addon in pairs(elementData) do
+				for _, themeName in ipairs({"Line", "PrimaryColor", "PrimaryTextColor", "SecondaryTextColor", "PrimaryBackgroundColor", "SecondaryBackgroundColor", "TertiaryBackgroundColor", "ScrollingBarImageColor", "TabBackgroundColor"}) do
+					if elementName == themeName and elementType == "ColorPicker" and typeof(addon) == "table" and addon.getColor then
+						SavedData.ColorPicker[elementName] = {color = {addon:getColor().R * 255, addon:getColor().G * 255, addon:getColor().B * 255}}
+					end
+				end
+			end
+		end
+
+		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		writefile("Leny/Theme/" .. themeConfigName:getText() .. ".json", encoded)
+		ThemeConfigs:updateList({list = listfiles("Leny/Theme"), default = {ThemeConfigs:getValue()}})
+	end})
+
+	ThemeManager:createButton({text = "Load Theme Config", callback = function()
+		local stringV = string.gsub(ThemeConfigs:getValue(), "Leny/Theme\\", "")
+		print(stringV)
+		
+		local decoded = game:GetService("HttpService"):JSONDecode(readfile("Leny/Theme/" .. stringV))
+
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, _ in pairs(elementData) do
+				if elementType == "ColorPicker" and decoded.ColorPicker[elementName] then
+					shared.Flags.ColorPicker[elementName]:updateColor({color = Color3.fromRGB(unpack(decoded.ColorPicker[elementName].color))})
+				end
+			end
+		end
+	end})
+end
+
+-- Set users theme choice or default theme when initiliazed, could make this cleaner lol, but nah.
 Library.Theme.PrimaryBackgroundColor = Library.Theme.PrimaryBackgroundColor
 Library.Theme.SecondaryBackgroundColor = Library.Theme.SecondaryBackgroundColor
 Library.Theme.TertiaryBackgroundColor = Library.Theme.TertiaryBackgroundColor -- new
