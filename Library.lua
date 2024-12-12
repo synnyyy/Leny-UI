@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 print("Version: test release | 12/10/2024 | 8:04")
+=======
+print("Version: Test release | Version 0.5 | 12/11/2024 | 6:30")
+>>>>>>> Stashed changes
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -47,18 +51,18 @@ local Exclusions = Library.Exclusions
 
 local Assets = ScreenGui.Assets
 local Modules = {
-	Dropdown = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Dropdown.lua", true))(),
-	Toggle = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Toggle.lua", true))(),
-	Popup = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Popup.lua", true))(),
-	Slider = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Slider.lua", true))(),
-	Keybind = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Keybind.lua", true))(),
-	TextBox = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/TextBox.lua", true))(),
-	Navigation = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Navigation.lua", true))(),
-	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
+	Dropdown = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Dropdown.lua", true))(),
+	Toggle = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Toggle.lua", true))(),
+	Popup = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Popup.lua", true))(),
+	Slider = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Slider.lua", true))(),
+	Keybind = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Keybind.lua", true))(),
+	TextBox = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/TextBox.lua", true))(),
+	Navigation = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Navigation.lua", true))(),
+	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/ColorPicker.lua", true))(),
 }
 
-local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
-local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
+local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Utility.lua", true))()
+local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/test/Modules/Theme.lua", true))()
 Library.Theme = Theme
 
 local Popups = ScreenGui.Popups
@@ -631,10 +635,6 @@ function Library:createToggle(options: table, parent, scrollingFrame)
 			Toggle:updateState(options)
 		end,
 	})
-
-	shared.Flags.Toggle[options.text] = Addons
-
-	return Addons
 end
 
 function Library:createSlider(options: table, parent, scrollingFrame)
@@ -734,8 +734,6 @@ function Library:createSlider(options: table, parent, scrollingFrame)
 			Slider:updateValue(options)
 		end,
 	})
-
-	shared.Flags.Slider[options.text] = Addons
 end
 
 function Library:createPicker(options: table, scrollingFrame)
@@ -1032,10 +1030,6 @@ function Library:createDropdown(options: table, parent, scrollingFrame)
 			Dropdown:updateList(options)
 		end,
 	})
-
-	shared.Flags.Dropdown[options.text] = Addons
-
-	return Addons
 end
 
 function Library:createKeybind(options: table, parent, scrollingFrame)
@@ -1106,8 +1100,6 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 			Keybind:updateKeybind(options)
 		end,
 	})
-
-	shared.Flags.Keybind[options.text] = Addons
 end
 
 -- Rushed this, later put it into a module like the other elements, even though it's simple.
@@ -1208,10 +1200,6 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 			Context.callback(Box.Text)
 		end,
 	})
-
-	shared.Flags.TextBox[options.text] = Addons
-
-	return Addons
 end
 
 -- Later put this into a module, but this is fine if it's put here anyways.
@@ -1346,120 +1334,5 @@ Theme:registerToObjects({
 -- Make UI Draggable and Resizable
 Utility:draggable(Library, Glow)
 Utility:resizable(Library, Glow.Background.Pages.Resize, Glow)
-
--- Save Manager, Theme Manager, UI settings | WIP
-task.defer(function()
-	task.wait(5)
-	local UI = Library:createTab({text = "UI"})
-	local Page = UI:createSubTab({text = "Page 1"})
-	local UI = Page:createSection({text = "UI"})
-	local SaveManager = Page:createSection({position = "Right", text = "Save Manager (WIP)"})
-	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager (WIP)"})
-
-	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
-		Theme:setTheme("SecondaryTextColor", color)
-	end,})
-
-	UI:createPicker({text = "PrimaryTextColor", default = Theme.PrimaryTextColor, callback = function(color)
-		Theme:setTheme("PrimaryTextColor", color)
-	end,})
-	UI:createPicker({text = "PrimaryBackgroundColor", default = Theme.PrimaryBackgroundColor, callback = function(color)
-		Theme:setTheme("PrimaryBackgroundColor", color)
-	end,})
-	UI:createPicker({text = "SecondaryBackgroundColor", default = Theme.SecondaryBackgroundColor, callback = function(color)
-		Theme:setTheme("SecondaryBackgroundColor", color)
-	end,})
-	UI:createPicker({text = "TabBackgroundColor", default = Theme.TabBackgroundColor, callback = function(color)
-		Theme:setTheme("TabBackgroundColor", color)
-	end,})
-	UI:createPicker({text = "PrimaryColor", default = Theme.PrimaryColor, callback = function(color)
-		Theme:setTheme("PrimaryColor", color)
-	end,})
-	UI:createPicker({text = "Outline", default = Theme.Line, callback = function(color)
-		Theme:setTheme("Line", color)
-	end,})
-	UI:createPicker({text = "TertiaryBackgroundColor", default = Theme.TertiaryBackgroundColor, callback = function(color)
-		Theme:setTheme("TertiaryBackgroundColor", color)
-	end,})
-	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
-		Theme:setTheme("SecondaryTextColor", color)
-	end,})
-	UI:createPicker({text = "ScrollingBarImageColor", default = Theme.ScrollingBarImageColor, callback = function(color)
-		Theme:setTheme("ScrollingBarImageColor", color)
-	end,})	
-
-	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
-
-	local configName = SaveManager:createTextBox({})
-	
-	if not isfolder("Leny") then
-		makefolder("Leny")
-	end
-
-	local Configs = SaveManager:createDropdown({text = "Configs", list = listfiles("Leny")})
-	SaveManager:createButton({text = "Save/Overwrite Config", callback = function()
-		local SavedData = {
-			Dropdown = {},
-			Toggle = {},
-			Keybind = {},
-			Slider = {},
-			TextBox = {},
-		}
-
-		for elementType, elementData in pairs(shared.Flags) do
-			for elementName, addon in pairs(elementData) do
-				if elementType == "Dropdown" and typeof(addon) == "table" and addon.getList and addon.getValue then
-					SavedData.Dropdown[elementName] = {list = addon:getList(), value = addon:getValue()}
-				end
-
-				if elementType == "Toggle" and typeof(addon) == "table" and addon.getState then
-					SavedData.Toggle[elementName] = {state = addon:getState()}
-				end
-
-				if elementType == "Slider" and typeof(addon) == "table" and addon.getValue then
-					SavedData.Slider[elementName] = {value = addon:getValue()}
-				end
-
-				if elementType == "Keybind" and typeof(addon) == "table" and addon.getKeybind then
-					SavedData.Keybind[elementName] = {value = addon:getKeybind()}
-				end
-
-				if elementType == "TextBox" and typeof(addon) == "table" and addon.getText then
-					SavedData.TextBox[elementName] = {value = addon:getText()}
-				end
-			end
-		end
-
-		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
-		--[[local decoded = game:GetService("HttpService"):JSONDecode(encoded)
-
-		for elementType, elementData in pairs(shared.Flags) do
-			for elementName, _ in pairs(elementData) do
-				if elementType == "Dropdown" and decoded.Dropdown[elementName] then
-					print(elementName, decoded.Dropdown[elementName])
-				end
-
-				if elementType == "Toggle" and decoded.Toggle[elementName] then
-					print(elementName, decoded.Toggle[elementName])
-				end
-
-				if elementType == "Slider" and decoded.Slider[elementName] then
-					print(elementName, decoded.Slider[elementName])
-				end
-
-				if elementType == "Keybind" and decoded.Keybind[elementName] then
-					print(elementName, decoded.Keybind[elementName])
-				end
-
-				if elementType == "TextBox" and decoded.TextBox[elementName] then
-					print(elementName, decoded.TextBox[elementName])
-				end
-			end
-		end--]]
-		
-		writefile("Leny/" .. configName:getText() .. ".json", encoded)
-		Configs:updateList({list = listfiles("Leny"), default = {Configs:getValue()}})
-	end,})
-end)
 
 return Library
