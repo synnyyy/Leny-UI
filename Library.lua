@@ -1,4 +1,4 @@
-print("Version: Version 0.5 | 12/11/2024 | 8:00")
+print("Version: 0.6 | 12/13/2024 | 5:33")
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -814,6 +814,7 @@ function Library:createPicker(options: table, parent, scrollingFrame, isPickerBo
 
 	local Popup = Modules.Popup.new(PopupContext)
 	TextButton.MouseButton1Down:Connect(Popup:togglePopup())
+	Popup:hidePopupOnClickingOutside()
 
 	local ColorPickerContext = Utility:validateContext({
 		ColorPicker = {Value = ColorPicker, ExpectedType = "Instance"},
@@ -1099,15 +1100,15 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 	
 	local TextButton = Background.TextButton
 	
-	if options.default ~= "None" then
-		table.insert(Exclusions, options.default)
-	end
-	
 	if not table.find(self.Exclusions, options.default) then
 		TextButton.Text = options.default
 	else
 		TextButton.Text = "None"
 		warn("You already have this key binded")
+	end
+
+	if options.default ~= "None" then
+		table.insert(Exclusions, options.default)
 	end
 
 	local Context = Utility:validateContext({
@@ -1376,13 +1377,17 @@ function Library:notify(options: table)
 	})
 end
 
--- Save Manager, Theme Manager, UI settings | Working but still (WIP) | Messy ass hell since I'm rushing to release.
-function Library:createManager()
+-- Save Manager, Theme Manager, UI settings | Messy ass hell, clean up later.
+function Library:createManager(options: table)
+	Utility:validateOptions(options, {
+		folderName = {Default = "Leny", ExpectedType = "string"},
+	})
+
 	local UI = Library:createTab({text = "UI"})
 	local Page = UI:createSubTab({text = "Page 1"})
 	local UI = Page:createSection({text = "UI"})
-	local SaveManager = Page:createSection({position = "Right", text = "Save Manager (WIP, WORKS)"})
-	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager (WIP, WORKS)"})
+	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
+	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager"})
 	
 	UI:createPicker({text = "SecondaryTextColor", default = Theme.SecondaryTextColor, callback = function(color)
 		Theme:setTheme("SecondaryTextColor", color)
@@ -1417,18 +1422,84 @@ function Library:createManager()
 	end,})	
 	
 	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
-	
-	local configName = SaveManager:createTextBox({})
-	
-	if not isfolder("Leny") then
-		makefolder("Leny")
+
+	if not isfolder(options.folderName) then
+		makefolder(options.folderName)
 	end
 
-	if not isfolder("Leny/Theme") then
-		makefolder("Leny/Theme")
+	if not isfolder(options.folderName .. "/Theme") then
+		makefolder(options.folderName .. "/Theme")
 	end
+
+	local configName = SaveManager:createTextBox({text = "Config Name"})
+
+	local jsons = {}
+	for _, file in ipairs(listfiles(options.folderName)) do
+		if not string.match(file, "Theme") then
+			file = string.gsub(file, options.folderName .. "\\", "")
+			file = string.gsub(file, ".json", "")
+			table.insert(jsons, file)
+		end
+	end
+
+	SaveManager:createButton({text = "Create Config", callback = function()
+		local SavedData = {
+			Dropdown = {},
+			Toggle = {},
+			Keybind = {},
+			Slider = {},
+			TextBox = {},
+			ColorPicker = {},
+		}
+
+		local Excluded = {"Line", "PrimaryColor", "PrimaryTextColor", "SecondaryTextColor", "PrimaryBackgroundColor", "SecondaryBackgroundColor", "TertiaryBackgroundColor", "ScrollingBarImageColor", "TabBackgroundColor"}
 	
-	local Configs = SaveManager:createDropdown({text = "Configs", list = listfiles("Leny")})
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, addon in pairs(elementData) do
+				if elementType == "Dropdown" and typeof(addon) == "table" and addon.getList and addon.getValue then
+					SavedData.Dropdown[elementName] = {list = addon:getList(), value = addon:getValue()}
+				end
+	
+				if elementType == "Toggle" and typeof(addon) == "table" and addon.getState then
+					SavedData.Toggle[elementName] = {state = addon:getState()}
+				end
+	
+				if elementType == "Slider" and typeof(addon) == "table" and addon.getValue then
+					SavedData.Slider[elementName] = {value = addon:getValue()}
+				end
+	
+				if elementType == "Keybind" and typeof(addon) == "table" and addon.getKeybind then
+					SavedData.Keybind[elementName] = {keybind = addon:getKeybind()}
+				end
+	
+				if elementType == "TextBox" and typeof(addon) == "table" and addon.getText then
+					SavedData.TextBox[elementName] = {text = addon:getText()}
+				end
+
+				if not table.find(Excluded, elementName) and elementType == "ColorPicker" and typeof(addon) == "table" and addon.getColor then
+					SavedData.ColorPicker[elementName] = {color = {addon:getColor().R * 255, addon:getColor().G * 255, addon:getColor().B * 255}}
+				end
+			end
+		end
+	
+		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		writefile(options.folderName .. "/" .. configName:getText() .. ".json", encoded)
+		
+		jsons = {}
+		for _, file in ipairs(listfiles(options.folderName)) do
+			if not string.match(file, "Theme") then
+				file = string.gsub(file, options.folderName .. "\\", "")
+				file = string.gsub(file, ".json", "")
+				table.insert(jsons, file)
+			end
+		end
+
+		if shared.Flags.Dropdown["Configs"] then
+			shared.Flags.Dropdown["Configs"]:updateList({list = jsons, default = {shared.Flags.Dropdown["Configs"]:getValue()}})
+		end
+	end})
+	
+	local Configs = SaveManager:createDropdown({text = "Configs", list = jsons})
 	SaveManager:createButton({text = "Save/Overwrite Config", callback = function()
 		local SavedData = {
 			Dropdown = {},
@@ -1470,12 +1541,13 @@ function Library:createManager()
 		end
 	
 		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
-		writefile("Leny/" .. configName:getText() .. ".json", encoded)
-		Configs:updateList({list = listfiles("Leny"), default = {Configs:getValue()}})
+		writefile(options.folderName .. "/" .. Configs:getValue() .. ".json", encoded)
+		
+		Configs:updateList({list = jsons, default = {Configs:getValue()}})
 	end,})
 
 	SaveManager:createButton({text = "Load Config", callback = function()
-		local decoded = game:GetService("HttpService"):JSONDecode(readfile(Configs:getValue()))
+		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. Configs:getValue() .. ".json"))
 
 		for elementType, elementData in pairs(shared.Flags) do
 			for elementName, _ in pairs(elementData) do
@@ -1506,8 +1578,46 @@ function Library:createManager()
 		end
 	end})
 
-	local themeConfigName = ThemeManager:createTextBox({})
-	local ThemeConfigs = ThemeManager:createDropdown({text = "Theme Configs", list = listfiles("Leny/Theme")})
+	local themeJsons = {}
+	for _, file in ipairs(listfiles(options.folderName .. "/Theme")) do
+		file = string.gsub(file, options.folderName .. "/Theme" .. "\\", "")
+		file = string.gsub(file, ".json", "")
+		table.insert(themeJsons, file)
+	end
+
+	local themeConfigName = ThemeManager:createTextBox({text = "Theme Config Name"})
+
+	ThemeManager:createButton({text = "Create Theme Config", callback = function()
+		local SavedData = {
+			ColorPicker = {},
+		}
+	
+		for elementType, elementData in pairs(shared.Flags) do
+			for elementName, addon in pairs(elementData) do
+				for _, themeName in ipairs({"Line", "PrimaryColor", "PrimaryTextColor", "SecondaryTextColor", "PrimaryBackgroundColor", "SecondaryBackgroundColor", "TertiaryBackgroundColor", "ScrollingBarImageColor", "TabBackgroundColor"}) do
+					if elementName == themeName and elementType == "ColorPicker" and typeof(addon) == "table" and addon.getColor then
+						SavedData.ColorPicker[elementName] = {color = {addon:getColor().R * 255, addon:getColor().G * 255, addon:getColor().B * 255}}
+					end
+				end
+			end
+		end
+
+		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		writefile(options.folderName .. "/" .. "Theme/" .. themeConfigName:getText() .. ".json", encoded)
+		
+		themeJsons = {}
+		for _, file in ipairs(listfiles(options.folderName .. "/Theme")) do
+			file = string.gsub(file, options.folderName .. "/Theme" .. "\\", "")
+			file = string.gsub(file, ".json", "")
+			table.insert(themeJsons, file)
+		end
+
+		if shared.Flags.Dropdown["Theme Configs"] then
+			shared.Flags.Dropdown["Theme Configs"]:updateList({list = themeJsons, default = {shared.Flags.Dropdown["Theme Configs"]:getValue()}})
+		end
+	end})
+
+	local ThemeConfigs = ThemeManager:createDropdown({text = "Theme Configs", list = themeJsons})
 
 	ThemeManager:createButton({text = "Save Theme Config", callback = function()
 		local SavedData = {
@@ -1525,15 +1635,13 @@ function Library:createManager()
 		end
 
 		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
-		writefile("Leny/Theme/" .. themeConfigName:getText() .. ".json", encoded)
-		ThemeConfigs:updateList({list = listfiles("Leny/Theme"), default = {ThemeConfigs:getValue()}})
+		writefile(options.folderName .. "/" .. "Theme/" .. ThemeConfigs:getValue() .. ".json", encoded)
+		
+		ThemeConfigs:updateList({list = themeJsons, default = {ThemeConfigs:getValue()}})
 	end})
 
 	ThemeManager:createButton({text = "Load Theme Config", callback = function()
-		local stringV = string.gsub(ThemeConfigs:getValue(), "Leny/Theme\\", "")
-		print(stringV)
-		
-		local decoded = game:GetService("HttpService"):JSONDecode(readfile("Leny/Theme/" .. stringV))
+		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. "Theme/" .. ThemeConfigs:getValue() .. ".json"))
 
 		for elementType, elementData in pairs(shared.Flags) do
 			for elementName, _ in pairs(elementData) do
