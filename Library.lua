@@ -1,5 +1,3 @@
-print("Version: 0.6 | 12/13/2024 | 5:33")
-
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
