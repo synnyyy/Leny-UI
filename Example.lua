@@ -33,7 +33,7 @@ local Section = Page1:createSection({
 })
 
 Section:createToggle({
-	text = "Toggle",
+	text = "Toggle 1",
 	state = false,
 	callback = function(state)
 		print(state)
@@ -42,7 +42,7 @@ Section:createToggle({
 
 Section:createKeybind({
 	onHeld = false,
-	text = "Keybind",
+	text = "Keybind 1",
 	default = "RightBracket",
 	callback = function(keyName)
 		print(keyName)
@@ -50,7 +50,7 @@ Section:createKeybind({
 }) -- :getKeybind(), :updateKeybind({bind = "LeftShift"})
 
 Section:createSlider({
-	text = "Slider",
+	text = "Slider 1",
 	min = 0,
 	max = 100,
 	step = 1,
@@ -60,7 +60,7 @@ Section:createSlider({
 }) -- :getValue(), :updateValue({value = 100})
 
 Section:createPicker({
-	text = "ColorPicker",
+	text = "ColorPicker 1",
 	default = Color3.fromRGB(255, 255, 255),
 	callback = function(color)
 		print(color)
@@ -68,24 +68,34 @@ Section:createPicker({
 }) -- :getColor(), :updateColor({color = Color3.fromRGB(255, 255, 0)})
 
 Section:createDropdown({
-	text = "Dropdown",
-	list = {1, 2, 3},
-	default = {1, 2},
+	text = "Dropdown 1",
+	list = {"Hello", "World!"},
+	default = {"Hello"},
 	multiple = false, -- choose multiple from list, makes callback value return a table now
 	callback = function(value)
 		print(value)
 	end
 }) -- :getList() (returns the list you provided, not the value), :getValue(), :updateList({list = {1,2,3}, default = {1, 2}})
 
+Section:createDropdown({
+	text = "Multiselect Dropdown",
+	list = {1,2,3,4,5},
+	default = {1,2},
+	multiple = true,
+	callback = function(value)
+		print(unpack(value))
+	end
+})
+
 Section:createButton({
-	text = "Button",
+	text = "Button 1",
 	callback = function()
 		print("this is a button")
 	end
 })
 
 Section:createTextBox({
-	text = "TextBox",
+	text = "TextBox 1",
 	default = "hi",
 	callback = function(text)
 		print(text)
@@ -95,7 +105,7 @@ Section:createTextBox({
 
 -- Addon example, currently supported Addons (Toggle, Slider, Dropdown, Picker)
 local Toggle = Section:createToggle({
-	text = "Toggle",
+	text = "Toggle 2",
 	state = false,
 	callback = function(state)
 		print(state)
@@ -109,7 +119,7 @@ Toggle:createDropdown({})
 Toggle:createToggle({})
 
 -- Flags example
-print(shared.Flags.Toggle["Toggle"]:getState()) -- refers to the {text = "Toggle"} you set for the element
+print(shared.Flags.Toggle["Toggle 1"]:getState()) -- refers to the {text = "Toggle 1"} you set for the element
 
 -- Creates the theme changer, config manager, etc
 Library:createManager({folderName = "brah"})
