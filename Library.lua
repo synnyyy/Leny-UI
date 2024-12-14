@@ -1433,7 +1433,7 @@ function Library:createManager(options: table)
 
 	local jsons = {}
 	for _, file in ipairs(listfiles(options.folderName)) do
-		if not string.match(file, "Theme") then
+		if not string.match(file, "Theme") and not string.match(file, "autoload") then
 			file = string.gsub(file, options.folderName .. "\\", "")
 			file = string.gsub(file, ".json", "")
 			table.insert(jsons, file)
@@ -1485,7 +1485,7 @@ function Library:createManager(options: table)
 		
 		jsons = {}
 		for _, file in ipairs(listfiles(options.folderName)) do
-			if not string.match(file, "Theme") then
+			if not string.match(file, "Theme") and not string.match(file, "autoload") then
 				file = string.gsub(file, options.folderName .. "\\", "")
 				file = string.gsub(file, ".json", "")
 				table.insert(jsons, file)
@@ -1544,8 +1544,8 @@ function Library:createManager(options: table)
 		Configs:updateList({list = jsons, default = {Configs:getValue()}})
 	end,})
 
-	SaveManager:createButton({text = "Load Config", callback = function()
-		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. Configs:getValue() .. ".json"))
+  local function loadConfig(FileName)
+		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. FileName .. ".json"))
 
 		for elementType, elementData in pairs(shared.Flags) do
 			for elementName, _ in pairs(elementData) do
@@ -1574,7 +1574,19 @@ function Library:createManager(options: table)
 				end
 			end
 		end
+  end
+
+	SaveManager:createButton({text = "Load Config", callback = function()
+    loadConfig(Configs:getValue())
 	end})
+
+  SaveManager:createButton({text = "Set as Auto Load", callback = function()
+    writefile(options.folderName .. "/autoload.txt", Configs:getValue())
+  end})
+
+  if isfile(options.folderName .. "/autoload.txt") then
+    loadConfig(readfile(options.folderName .. "/autoload.txt"))
+  end
 
 	local themeJsons = {}
 	for _, file in ipairs(listfiles(options.folderName .. "/Theme")) do
