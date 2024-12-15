@@ -4,13 +4,13 @@ Library.new({
 	sizeX = 770,
 	sizeY = 600,
 	title = "yo",
-	tabWidth = 200, -- (72 for icons only, didn't do a min check lol)
+	tabSizeX = 200, -- (min: 72, max: 208)
 })
 
--- Will add max width later
 Library:notify({
 	title = "Notification",
 	text = "Hello world",
+	maxSizeX = 300,
 	scaleX = 0.165,
 	sizeY = 200,
 })
