@@ -1514,8 +1514,8 @@ function Library:createManager(options: table)
 		folderName = {Default = "Leny", ExpectedType = "string"},
 	})
 
-	local UI = Library:createTab({text = "UI", icon = "10734950309"})
-	local Page = UI:createSubTab({text = "Page 1"})
+	local UI = Library:createTab({text = "Settings", icon = "6031280882"})
+	local Page = UI:createSubTab({text = "User Interface"})
 	local UI = Page:createSection({text = "UI"})
 	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
 	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager"})
