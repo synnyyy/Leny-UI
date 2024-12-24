@@ -10,16 +10,17 @@ local Theme = {
 	ScrollingBarImageColor = Color3.fromRGB(151, 151, 172),
 	Line = Color3.fromRGB(236, 236, 236),--]]
 	
-	-- dark
-	PrimaryBackgroundColor = Color3.fromRGB(28, 31, 38),
-	SecondaryBackgroundColor = Color3.fromRGB(20, 22, 27),
-	TertiaryBackgroundColor = Color3.fromRGB(255, 255, 255), -- new
-	TabBackgroundColor = Color3.fromRGB(35, 41, 51),
-	PrimaryTextColor = Color3.fromRGB(255, 255, 255),
-	SecondaryTextColor = Color3.fromRGB(125, 146, 173),
-	PrimaryColor = Color3.fromRGB(120, 163, 255),
-	ScrollingBarImageColor = Color3.fromRGB(151, 151, 172),
-	Line = Color3.fromRGB(38, 41, 49),
+	-- Muted Grey Theme
+	PrimaryBackgroundColor = Color3.fromRGB(42, 44, 48),  -- Muted dark grey background
+	SecondaryBackgroundColor = Color3.fromRGB(35, 37, 41),  -- Slightly lighter grey
+	TertiaryBackgroundColor = Color3.fromRGB(85, 85, 85),  -- Soft grey
+	TabBackgroundColor = Color3.fromRGB(60, 63, 70),  -- Muted grey for tabs
+	PrimaryTextColor = Color3.fromRGB(200, 200, 200),  -- Soft white/grey text
+	SecondaryTextColor = Color3.fromRGB(140, 150, 160),  -- Light grey text with subtle tone
+	PrimaryColor = Color3.fromRGB(100, 120, 140),  -- Muted blue-grey for primary accents
+	ScrollingBarImageColor = Color3.fromRGB(130, 130, 140),  -- Muted scrolling bar color
+	Line = Color3.fromRGB(55, 58, 63)  -- Darker muted grey line
+
 }
 
 local ThemeObjects = {}
