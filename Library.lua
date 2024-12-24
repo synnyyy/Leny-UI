@@ -1514,7 +1514,7 @@ function Library:createManager(options: table)
 		folderName = {Default = "Leny", ExpectedType = "string"},
 	})
 
-	local UI = Library:createTab({text = "UI"})
+	local UI = Library:createTab({text = "UI", icon = "rbxassetid://10734950309"})
 	local Page = UI:createSubTab({text = "Page 1"})
 	local UI = Page:createSection({text = "UI"})
 	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
