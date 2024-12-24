@@ -17,7 +17,7 @@ local Theme = {
 	TabBackgroundColor = Color3.fromRGB(60, 63, 70),  -- Muted grey for tabs
 	PrimaryTextColor = Color3.fromRGB(200, 200, 200),  -- Soft white/grey text
 	SecondaryTextColor = Color3.fromRGB(140, 150, 160),  -- Light grey text with subtle tone
-	PrimaryColor = Color3.fromRGB(100, 120, 140),  -- Muted blue-grey for primary accents
+	PrimaryColor = Color3.fromRGB(120, 140, 160),  -- Brighter muted blue-grey for primary accents
 	ScrollingBarImageColor = Color3.fromRGB(130, 130, 140),  -- Muted scrolling bar color
 	Line = Color3.fromRGB(55, 58, 63)  -- Darker muted grey line
 
