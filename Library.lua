@@ -48,17 +48,17 @@ local Exclusions = Library.Exclusions
 
 local Assets = ScreenGui.Assets
 local Modules = {
-	Dropdown = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Dropdown.lua", true))(),
-	Toggle = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Toggle.lua", true))(),
-	Popup = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Popup.lua", true))(),
-	Slider = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Slider.lua", true))(),
-	Keybind = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Keybind.lua", true))(),
-	TextBox = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/TextBox.lua", true))(),
-	Navigation = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Navigation.lua", true))(),
-	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
+	Dropdown = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Dropdown.lua", true))(),
+	Toggle = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Toggle.lua", true))(),
+	Popup = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Popup.lua", true))(),
+	Slider = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Slider.lua", true))(),
+	Keybind = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Keybind.lua", true))(),
+	TextBox = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/TextBox.lua", true))(),
+	Navigation = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Navigation.lua", true))(),
+	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
 }
 
-local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
+local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
 local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
 Library.Theme = Theme
 
@@ -143,11 +143,29 @@ function Library.new(options)
 		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
 		tabSizeX = {Default = Library.tabSizeX, ExpectedType = "number"},
 		title = {Default = "Leny", ExpectedType = "string"},
+		PrimaryBackgroundColor = {Default = Library.Theme.PrimaryBackgroundColor, ExpectedType = "Color3"},
+		SecondaryBackgroundColor = {Default = Library.Theme.SecondaryBackgroundColor, ExpectedType = "Color3"},
+		TertiaryBackgroundColor = {Default = Library.Theme.TertiaryBackgroundColor, ExpectedType = "Color3"},
+		TabBackgroundColor = {Default = Library.Theme.TabBackgroundColor, ExpectedType = "Color3"},
+		PrimaryTextColor = {Default = Library.Theme.PrimaryTextColor, ExpectedType = "Color3"},
+		SecondaryTextColor = {Default = Library.Theme.SecondaryTextColor, ExpectedType = "Color3"},
+		PrimaryColor = {Default = Library.Theme.PrimaryColor, ExpectedType = "Color3"},
+		ScrollingBarImageColor = {Default = Library.Theme.ScrollingBarImageColor, ExpectedType = "Color3"},
+		Line = {Default = Library.Theme.Line, ExpectedType = "Color3"},
 	})
 
 	Library.tabSizeX = math.clamp(options.tabSizeX, 72, 208)
 	Library.sizeX = options.sizeX
 	Library.sizeY = options.sizeY
+	Library.Theme.PrimaryBackgroundColor = options.PrimaryBackgroundColor
+	Library.Theme.SecondaryBackgroundColor = options.SecondaryBackgroundColor
+	Library.Theme.TertiaryBackgroundColor = options.TertiaryBackgroundColor -- new
+	Library.Theme.TabBackgroundColor = options.TabBackgroundColor
+	Library.Theme.PrimaryTextColor = options.PrimaryTextColor
+	Library.Theme.SecondaryTextColor = options.SecondaryTextColor
+	Library.Theme.PrimaryColor = options.PrimaryColor
+	Library.Theme.ScrollingBarImageColor = options.ScrollingBarImageColor
+	Library.Theme.Line = options.Line
 
 	ScreenGui.Enabled = true
 	Title.Text = options.title
@@ -202,6 +220,18 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 
 		createPicker = function(self, options)
 			Library:createPicker(options, Addon.Inner, scrollingFrame, true)
+		end,
+
+		createKeybind = function(self, options)
+			Library:createKeybind(options, Addon.Inner, scrollingFrame)
+		end,
+		
+		createButton = function(self, options)
+			Library:createButton(options, Addon.Inner, scrollingFrame)
+		end,
+		
+		createTextBox = function(self, options)
+			Library:createTextBox(options, Addon.Inner, scrollingFrame)
 		end,
 	}
 
@@ -827,6 +857,26 @@ function Library:createPicker(options: table, parent, scrollingFrame, isPickerBo
 		Connections = {Value = Connections, ExpectedType = "table"},
 		color = {Value = options.color, ExpectedType = "Color3"},
 		callback = {Value = options.callback, ExpectedType = "function"},
+
+		submitAnimation = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0}, 0.2):Play()
+
+			task.delay(0.2, function()
+				Utility:tween(Submit.TextLabel, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+				Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0.3}, 0.2):Play()
+			end)
+		end, ExpectedType = "function"},
+		
+		hoveringOn = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0.3}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0.3}, 0.2):Play()
+		end, ExpectedType = "function"},
+		
+		hoveringOff = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+		end, ExpectedType = "function"}, 
 	})
 
 	Theme:registerToObjects({
@@ -1158,6 +1208,51 @@ function Library:createKeybind(options: table, parent, scrollingFrame)
 	})
 end
 
+function Library:createTextLabel(options: table, parent, scrollingFrame)
+	Utility:validateOptions(options, {
+		text = {Default = "Textbox", ExpectedType = "string"},
+	})
+	
+	scrollingFrame = self.ScrollingFrame or scrollingFrame
+	
+	local TextBox = Assets.Elements.TextBox:Clone()
+	TextBox.Visible = true
+	TextBox.Parent = parent or self.Section
+
+	local TextLabel = TextBox.TextLabel
+	TextLabel.Text = options.text
+	
+	local ImageButton = TextLabel.ImageButton
+	local Box = TextLabel.TextBox
+
+	Box:Destroy()
+	ImageButton:Destroy()
+	
+	Theme:registerToObjects({
+		{object = TextLabel, property = "TextColor3", theme = {"SecondaryTextColor"}},
+	})
+
+	shared.Flags.TextBox[options.text] = {
+		getText = function(self)
+			return TextLabel.Text
+		end,
+
+		updateText = function(self, options: table)
+			TextLabel.Text = options.text or ""
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+		getText = function(self)
+			return TextLabel.Text
+		end,
+
+		updateText = function(self, options: table)
+			TextLabel.Text = options.text or ""
+		end,
+	})
+end
+
 -- Rushed this, later put it into a module like the other elements, even though it's simple.
 function Library:createButton(options: table, parent, scrollingFrame)
 	Utility:validateOptions(options, {
@@ -1188,7 +1283,7 @@ function Library:createButton(options: table, parent, scrollingFrame)
 		options.callback() 
 	end)
 	
-	Background.InputBegan:Connect(function(input)
+	Background.MouseEnter:Connect(function(input)
 		Utility:tween(Background, {BackgroundTransparency = 0.3}, 0.2):Play()
 		Utility:tween(TextButton, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0.3}, 0.2):Play()
 	end)
@@ -1265,51 +1360,6 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 		updateText = function(self, options: table)
 			Box.Text = options.text or ""
 			Context.callback(Box.Text)
-		end,
-	})
-end
-
-function Library:createTextLabel(options: table, parent, scrollingFrame)
-	Utility:validateOptions(options, {
-		text = {Default = "Textbox", ExpectedType = "string"},
-	})
-	
-	scrollingFrame = self.ScrollingFrame or scrollingFrame
-	
-	local TextBox = Assets.Elements.TextBox:Clone()
-	TextBox.Visible = true
-	TextBox.Parent = parent or self.Section
-
-	local TextLabel = TextBox.TextLabel
-	TextLabel.Text = options.text
-	
-	local ImageButton = TextLabel.ImageButton
-	local Box = TextLabel.TextBox
-
-	Box:Destroy()
-	ImageButton:Destroy()
-	
-	Theme:registerToObjects({
-		{object = TextLabel, property = "TextColor3", theme = {"SecondaryTextColor"}},
-	})
-
-	shared.Flags.TextBox[options.text] = {
-		getText = function(self)
-			return TextLabel.Text
-		end,
-
-		updateText = function(self, options: table)
-			TextLabel.Text = options.text or ""
-		end,
-	}
-
-	return self:createAddons(options.text, ImageButton, scrollingFrame, {
-		getText = function(self)
-			return TextLabel.Text
-		end,
-
-		updateText = function(self, options: table)
-			TextLabel.Text = options.text or ""
 		end,
 	})
 end
@@ -1426,6 +1476,11 @@ end
 
 -- Save Manager, Theme Manager, UI settings
 function Library:createManager(options: table)
+	Utility:validateOptions(options, {
+		folderName = {Default = "Leny", ExpectedType = "string"},
+		icon = {Default = "124718082122263", ExpectedType = "string"}
+	})
+
 	local function getJsons() 
 		local jsons = {}
 		for _, file in ipairs(listfiles(options.folderName)) do
@@ -1555,12 +1610,8 @@ function Library:createManager(options: table)
 		end
 	end
 
-	Utility:validateOptions(options, {
-		folderName = {Default = "Leny", ExpectedType = "string"},
-	})
-
-	local UI = Library:createTab({text = "Settings", icon = "6031280882"})
-	local Page = UI:createSubTab({text = "User Interface"})
+	local UI = Library:createTab({text = "UI", icon = options.icon})
+	local Page = UI:createSubTab({text = "Page 1"})
 	local UI = Page:createSection({text = "UI"})
 	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
 	local ThemeManager = Page:createSection({position = "Right", text = "Theme Manager"})
@@ -1646,6 +1697,14 @@ function Library:createManager(options: table)
 		end,
 	})	
 	
+	UI:createKeybind({
+		text = "Hide UI", 
+		default = "Insert",
+		callback = function()
+			ScreenGui.Enabled = not ScreenGui.Enabled
+		end,
+	})
+
 	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
 
 	-- File system
@@ -1737,16 +1796,6 @@ function Library:createManager(options: table)
 end
 
 -- Set users theme choice or default theme when initiliazed, could make this cleaner lol, but nah.
-Library.Theme.PrimaryBackgroundColor = Library.Theme.PrimaryBackgroundColor
-Library.Theme.SecondaryBackgroundColor = Library.Theme.SecondaryBackgroundColor
-Library.Theme.TertiaryBackgroundColor = Library.Theme.TertiaryBackgroundColor -- new
-Library.Theme.TabBackgroundColor = Library.Theme.TabBackgroundColor
-Library.Theme.PrimaryTextColor = Library.Theme.PrimaryTextColor
-Library.Theme.SecondaryTextColor = Library.Theme.SecondaryTextColor
-Library.Theme.PrimaryColor = Library.Theme.PrimaryColor
-Library.Theme.ScrollingBarImageColor = Library.Theme.ScrollingBarImageColor
-Library.Theme.Line = Library.Theme.Line
-
 Theme:registerToObjects({
 	{object = Glow, property = "ImageColor3", theme = {"PrimaryBackgroundColor"}},
 	{object = Background, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
