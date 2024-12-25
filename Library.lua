@@ -1269,6 +1269,53 @@ function Library:createTextBox(options: table, parent, scrollingFrame)
 	})
 end
 
+function Library:createTextLabel(options: table, parent, scrollingFrame)
+	Utility:validateOptions(options, {
+		text = {Default = "Textbox", ExpectedType = "string"},
+	})
+	
+	scrollingFrame = self.ScrollingFrame or scrollingFrame
+	
+	local TextBox = Assets.Elements.TextBox:Clone()
+	TextBox.Visible = true
+	TextBox.Parent = parent or self.Section
+
+	local TextLabel = TextBox.TextLabel
+	TextLabel.Text = options.text
+	
+	local ImageButton = TextLabel.ImageButton
+	
+	local Box = TextLabel.TextBox
+	Box.Text = options.default
+
+	Box:Destroy()
+
+	
+	Theme:registerToObjects({
+		{object = TextLabel, property = "TextColor3", theme = {"SecondaryTextColor"}},
+	})
+
+	shared.Flags.TextBox[options.text] = {
+		getText = function(self)
+			return TextLabel.Text
+		end,
+
+		updateText = function(self, options: table)
+			TextLabel.Text = options.text or ""
+		end,
+	}
+
+	return self:createAddons(options.text, ImageButton, scrollingFrame, {
+		getText = function(self)
+			return TextLabel.Text
+		end,
+
+		updateText = function(self, options: table)
+			TextLabel.Text = TextLabel.text or ""
+		end,
+	})
+end
+
 -- Later put this into a module, but this is fine if it's put here anyways.
 local ChildRemoved = false
 function Library:notify(options: table)
