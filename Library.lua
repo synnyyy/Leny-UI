@@ -1284,12 +1284,10 @@ function Library:createTextLabel(options: table, parent, scrollingFrame)
 	TextLabel.Text = options.text
 	
 	local ImageButton = TextLabel.ImageButton
-	
 	local Box = TextLabel.TextBox
-	Box.Text = options.default
 
 	Box:Destroy()
-
+	ImageButton:Destroy()
 	
 	Theme:registerToObjects({
 		{object = TextLabel, property = "TextColor3", theme = {"SecondaryTextColor"}},
@@ -1311,7 +1309,7 @@ function Library:createTextLabel(options: table, parent, scrollingFrame)
 		end,
 
 		updateText = function(self, options: table)
-			TextLabel.Text = TextLabel.text or ""
+			TextLabel.Text = options.text or ""
 		end,
 	})
 end
