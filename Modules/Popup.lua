@@ -8,11 +8,15 @@ function Popup.new(context: table)
 	local self = setmetatable(context, Popup)
 
 	-- Auto size popup
-	self.ScrollingFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		if self.ScrollingFrame.Right.Visible then
-			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+	local absoluteSize; absoluteSize = self.ScrollingFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		if self.Popup and self.Popup:FindFirstChild("Inner") then
+			if self.ScrollingFrame.Right.Visible then
+				self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.5, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+			else
+				self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.75, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+			end
 		else
-			self.Popup.Size = UDim2.fromOffset((self.ScrollingFrame.AbsoluteSize.X - 7) * 0.75, self.Popup.Inner.UIListLayout.AbsoluteContentSize.Y + self.SizePadding)
+			absoluteSize:Disconnect()
 		end
 	end)
 

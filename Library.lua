@@ -20,9 +20,11 @@ local Library = {
 	firstTabDebounce = false,
 	firstSubTabDebounce = false, 
 	processedEvent = false,
+	managerCreated = false, -- Using this as a check to clean up unused Addon objects
 	lineIndex = 0,
 
 	Connections = {},
+	Addons = {}, -- To store addon frames to clean up unused ones later, this is my solution to this problem, if you can find a better solution then just create a pull request, thanks.
 	Exclusions = {},
 	SectionFolder = {
 		Left = {},
@@ -143,11 +145,29 @@ function Library.new(options)
 		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
 		tabSizeX = {Default = Library.tabSizeX, ExpectedType = "number"},
 		title = {Default = "Leny", ExpectedType = "string"},
+		PrimaryBackgroundColor = {Default = Library.Theme.PrimaryBackgroundColor, ExpectedType = "Color3"},
+		SecondaryBackgroundColor = {Default = Library.Theme.SecondaryBackgroundColor, ExpectedType = "Color3"},
+		TertiaryBackgroundColor = {Default = Library.Theme.TertiaryBackgroundColor, ExpectedType = "Color3"},
+		TabBackgroundColor = {Default = Library.Theme.TabBackgroundColor, ExpectedType = "Color3"},
+		PrimaryTextColor = {Default = Library.Theme.PrimaryTextColor, ExpectedType = "Color3"},
+		SecondaryTextColor = {Default = Library.Theme.SecondaryTextColor, ExpectedType = "Color3"},
+		PrimaryColor = {Default = Library.Theme.PrimaryColor, ExpectedType = "Color3"},
+		ScrollingBarImageColor = {Default = Library.Theme.ScrollingBarImageColor, ExpectedType = "Color3"},
+		Line = {Default = Library.Theme.Line, ExpectedType = "Color3"},
 	})
 
 	Library.tabSizeX = math.clamp(options.tabSizeX, 72, 208)
 	Library.sizeX = options.sizeX
 	Library.sizeY = options.sizeY
+	Library.Theme.PrimaryBackgroundColor = options.PrimaryBackgroundColor
+	Library.Theme.SecondaryBackgroundColor = options.SecondaryBackgroundColor
+	Library.Theme.TertiaryBackgroundColor = options.TertiaryBackgroundColor -- new
+	Library.Theme.TabBackgroundColor = options.TabBackgroundColor
+	Library.Theme.PrimaryTextColor = options.PrimaryTextColor
+	Library.Theme.SecondaryTextColor = options.SecondaryTextColor
+	Library.Theme.PrimaryColor = options.PrimaryColor
+	Library.Theme.ScrollingBarImageColor = options.ScrollingBarImageColor
+	Library.Theme.Line = options.Line
 
 	ScreenGui.Enabled = true
 	Title.Text = options.title
@@ -157,7 +177,7 @@ end
 function Library:createAddons(text, imageButton, scrollingFrame, additionalAddons)	
 	local Addon = Assets.Elements.Addons:Clone()
 	Addon.Size = UDim2.fromOffset(scrollingFrame.AbsoluteSize.X * 0.5, Addon.Inner.UIListLayout.AbsoluteContentSize.Y)
-	Addon.Parent = Popups
+	table.insert(self.Addons, Addon)
 	
 	local Inner = Addon.Inner
 	
@@ -203,6 +223,18 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 		createPicker = function(self, options)
 			Library:createPicker(options, Addon.Inner, scrollingFrame, true)
 		end,
+
+		createKeybind = function(self, options)
+			Library:createKeybind(options, Addon.Inner, scrollingFrame)
+		end,
+		
+		createButton = function(self, options)
+			Library:createButton(options, Addon.Inner, scrollingFrame)
+		end,
+		
+		createTextBox = function(self, options)
+			Library:createTextBox(options, Addon.Inner, scrollingFrame)
+		end,
 	}
 
 	for key, value in pairs(additionalAddons or  {}) do
@@ -217,6 +249,10 @@ function Library:createAddons(text, imageButton, scrollingFrame, additionalAddon
 				return function(...)
 					-- Show imageButton if the index name is "create"
 					if string.match(key, "create") then
+						if Addon.Parent == nil then
+							Addon.Parent = Popups
+						end
+
 						imageButton.Visible = true
 					end
 
@@ -827,6 +863,26 @@ function Library:createPicker(options: table, parent, scrollingFrame, isPickerBo
 		Connections = {Value = Connections, ExpectedType = "table"},
 		color = {Value = options.color, ExpectedType = "Color3"},
 		callback = {Value = options.callback, ExpectedType = "function"},
+
+		submitAnimation = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0}, 0.2):Play()
+
+			task.delay(0.2, function()
+				Utility:tween(Submit.TextLabel, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+				Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0.3}, 0.2):Play()
+			end)
+		end, ExpectedType = "function"},
+		
+		hoveringOn = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0.3}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0.3}, 0.2):Play()
+		end, ExpectedType = "function"},
+		
+		hoveringOff = {Value = function()
+			Utility:tween(Submit.TextLabel, {BackgroundTransparency = 0}, 0.2):Play()
+			Utility:tween(Submit.TextLabel, {TextColor3 = Theme.SecondaryTextColor, TextTransparency = 0}, 0.2):Play()
+		end, ExpectedType = "function"}, 
 	})
 
 	Theme:registerToObjects({
@@ -1188,7 +1244,7 @@ function Library:createButton(options: table, parent, scrollingFrame)
 		options.callback() 
 	end)
 	
-	Background.InputBegan:Connect(function(input)
+	Background.MouseEnter:Connect(function(input)
 		Utility:tween(Background, {BackgroundTransparency = 0.3}, 0.2):Play()
 		Utility:tween(TextButton, {TextColor3 = Theme.PrimaryColor, TextTransparency = 0.3}, 0.2):Play()
 	end)
@@ -1381,6 +1437,11 @@ end
 
 -- Save Manager, Theme Manager, UI settings
 function Library:createManager(options: table)
+	Utility:validateOptions(options, {
+		folderName = {Default = "Leny", ExpectedType = "string"},
+		icon = {Default = "124718082122263", ExpectedType = "string"}
+	})
+
 	local function getJsons() 
 		local jsons = {}
 		for _, file in ipairs(listfiles(options.folderName)) do
@@ -1510,11 +1571,7 @@ function Library:createManager(options: table)
 		end
 	end
 
-	Utility:validateOptions(options, {
-		folderName = {Default = "Leny", ExpectedType = "string"},
-	})
-
-	local UI = Library:createTab({text = "UI"})
+	local UI = Library:createTab({text = "UI", icon = options.icon})
 	local Page = UI:createSubTab({text = "Page 1"})
 	local UI = Page:createSection({text = "UI"})
 	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
@@ -1601,6 +1658,14 @@ function Library:createManager(options: table)
 		end,
 	})	
 	
+	UI:createKeybind({
+		text = "Hide UI", 
+		default = "Insert",
+		callback = function()
+			ScreenGui.Enabled = not ScreenGui.Enabled
+		end,
+	})
+
 	UI:createButton({text = "Destroy UI", callback = function() Library:destroy() end})
 
 	-- File system
@@ -1689,19 +1754,11 @@ function Library:createManager(options: table)
 			loadThemeConfig(ThemeConfigs:getValue())
 		end
 	})
+
+	self.managerCreated = true
 end
 
 -- Set users theme choice or default theme when initiliazed, could make this cleaner lol, but nah.
-Library.Theme.PrimaryBackgroundColor = Library.Theme.PrimaryBackgroundColor
-Library.Theme.SecondaryBackgroundColor = Library.Theme.SecondaryBackgroundColor
-Library.Theme.TertiaryBackgroundColor = Library.Theme.TertiaryBackgroundColor -- new
-Library.Theme.TabBackgroundColor = Library.Theme.TabBackgroundColor
-Library.Theme.PrimaryTextColor = Library.Theme.PrimaryTextColor
-Library.Theme.SecondaryTextColor = Library.Theme.SecondaryTextColor
-Library.Theme.PrimaryColor = Library.Theme.PrimaryColor
-Library.Theme.ScrollingBarImageColor = Library.Theme.ScrollingBarImageColor
-Library.Theme.Line = Library.Theme.Line
-
 Theme:registerToObjects({
 	{object = Glow, property = "ImageColor3", theme = {"PrimaryBackgroundColor"}},
 	{object = Background, property = "BackgroundColor3", theme = {"SecondaryBackgroundColor"}},
@@ -1715,5 +1772,18 @@ Theme:registerToObjects({
 -- Make UI Draggable and Resizable
 Utility:draggable(Library, Glow)
 Utility:resizable(Library, Glow.Background.Pages.Resize, Glow)
+
+-- Clean up Addon objects with no Addons
+task.spawn(function()
+	while not Library.managerCreated do
+		task.wait()
+	end
+	
+	for _, addon in pairs(Library.Addons) do
+		if addon.Parent == nil then
+			addon:Destroy()
+		end
+	end
+end)
 
 return Library

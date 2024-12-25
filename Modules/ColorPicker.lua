@@ -164,8 +164,12 @@ function ColorPicker:handleColorPicker(connections)
 	self.Submit.TextLabel.TextButton.MouseButton1Down:Connect(function()
 		self.Background.BackgroundColor3 = Color3.fromHSV(self.H, self.S, self.V)
 		self.color = self.Background.BackgroundColor3
-		self.callback(self.Background.BackgroundColor3)
+		self.submitAnimation()
+		self.callback(self.Background.BackgroundColor3)	
 	end)
+	
+	self.Submit.TextLabel.MouseEnter:Connect(self.hoveringOn)
+	self.Submit.TextLabel.MouseLeave:Connect(self.hoveringOff)
 end
 
 function ColorPicker:updateColor(options: table)

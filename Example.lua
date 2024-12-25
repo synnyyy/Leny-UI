@@ -4,7 +4,16 @@ Library.new({
 	sizeX = 770,
 	sizeY = 600,
 	title = "yo",
-	tabSizeX = 200, -- (min: 72, max: 208)
+	tabWidth = 200, -- (72 for icons only)
+	PrimaryBackgroundColor = Library.Theme.PrimaryBackgroundColor,
+	SecondaryBackgroundColor = Library.Theme.SecondaryBackgroundColor,
+	TertiaryBackgroundColor = Library.Theme.TertiaryBackgroundColor,
+	TabBackgroundColor = Library.Theme.TabBackgroundColor,
+	PrimaryTextColor = Library.Theme.PrimaryTextColor,
+	SecondaryTextColor = Library.Theme.SecondaryTextColor,
+	PrimaryColor = Library.Theme.PrimaryColor,
+	ScrollingBarImageColor = Library.Theme.ScrollingBarImageColor,
+	Line = Library.Theme.Line,
 })
 
 Library:notify({
@@ -103,7 +112,7 @@ Section:createTextBox({
 }) -- :getText(), :updateText({text = "bro"})
 
 
--- Addon example, currently supported Addons (Toggle, Slider, Dropdown, Picker)
+-- Addon example
 local Toggle = Section:createToggle({
 	text = "Toggle 2",
 	state = false,
@@ -112,7 +121,7 @@ local Toggle = Section:createToggle({
 	end
 })
 
--- Same thing as above
+-- Takes in same parameters/arguments as above
 Toggle:createPicker({})
 Toggle:createSlider({})
 Toggle:createDropdown({})
@@ -122,4 +131,7 @@ Toggle:createToggle({})
 print(shared.Flags.Toggle["Toggle 1"]:getState()) -- refers to the {text = "Toggle 1"} you set for the element
 
 -- Creates the theme changer, config manager, etc
-Library:createManager({folderName = "brah"})
+Library:createManager({
+	folderName = "brah",
+	icon = "124718082122263", -- 20x20 icon you want here
+})

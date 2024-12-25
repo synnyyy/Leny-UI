@@ -112,23 +112,37 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
 			setInitialPositionsAndSize(UserInputService:GetMouseLocation())
 		end
 	end
-
-	local function disableDrag(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	
+	local touchMoved = UserInputService.TouchMoved:Connect(function(input)
+		if dragging then
+			update(input)
+		end
+	end)
+	
+	local touchEnded = UserInputService.TouchEnded:Connect(function(input)
+		if dragging then
 			dragging = false
 			library.dragging = false
 		end
-	end
-
-	local function handleUpdate(input)
+	end)
+	
+	local inputChanged = UserInputService.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			update(input)
 		end
-	end
+	end)
+	
+	local inputEnded = UserInputService.InputEnded:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+			library.dragging = false
+		end
+	end)
 	
 	table.insert(library.Connections, ui[eventNameToEnableDrag]:Connect(enableDrag))
-	table.insert(library.Connections, UserInputService.InputChanged:Connect(handleUpdate))
-	table.insert(library.Connections, UserInputService.InputEnded:Connect(disableDrag))
+	table.insert(library.Connections, touchMoved)
+	table.insert(library.Connections, inputChanged)
+	table.insert(library.Connections, inputEnded)
 end
 
 function Utility:draggable(library: table, uiToEnableDrag: Instance)
