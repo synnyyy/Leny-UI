@@ -18,7 +18,7 @@ Theme:registerToObjects({
 }, "Loader")
 
 if IsOnMobile then
-	local UISize = Instance.new("UIScale", ScreenGui.Glow)
+	local UIScale = Instance.new("UIScale", ScreenGui.Glow)
 	UIScale.Scale = 0.5
 end
 
