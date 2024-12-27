@@ -1,3 +1,5 @@
+local Theme = loadstring(game:HttpGet("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
+
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local IsOnMobile = table.find({
@@ -5,8 +7,12 @@ local IsOnMobile = table.find({
 	Enum.Platform.Android
 }, UserInputService:GetPlatform())
 
-local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
-ScreenGui.Enabled = false
+local ScreenGui = game:GetObjects("rbxassetid://110406444123349")[1]
+ScreenGui.Glow.Visible = false
+
+Theme:registerToObjects({
+	{object = ScreenGui.Loading, property = "BackgroundColor3", theme = {"PrimaryColor"}},
+}, "Loader")
 
 if IsOnMobile then
 	local UISize = Instance.new("UIScale", ScreenGui.Glow)
@@ -14,7 +20,6 @@ if IsOnMobile then
 end
 
 ScreenGui.Parent = cloneref(game:GetService("CoreGui"))
-
 
 local Library = {
 	sizeX = 800,
@@ -65,7 +70,6 @@ local Modules = {
 }
 
 local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
-local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
 Library.Theme = Theme
 
 local Popups = ScreenGui.Popups
@@ -173,7 +177,8 @@ function Library.new(options)
 	Library.Theme.ScrollingBarImageColor = options.ScrollingBarImageColor
 	Library.Theme.Line = options.Line
 
-	ScreenGui.Enabled = true
+	ScreenGui.Glow.Visible = true
+	ScreenGui.Loading.Visible = false
 	Title.Text = options.title
 	Glow.Size = UDim2.fromOffset(options.sizeX, options.sizeY)
 end
@@ -1707,7 +1712,7 @@ function Library:createManager(options: table)
 		text = "Hide UI", 
 		default = "Insert",
 		callback = function()
-			ScreenGui.Enabled = not ScreenGui.Enabled
+			ScreenGui.Glow.Visible = not ScreenGui.Glow.Visible
 		end,
 	})
 
