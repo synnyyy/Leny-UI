@@ -4,13 +4,15 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 
 function Utility:tween(object, properties, duration, easingStyle, easingDirection)
-	local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle[easingStyle or "Circular"], Enum.EasingDirection[easingDirection or "Out"])
+	local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle[easingStyle] or Enum.EasingStyle.Circular, Enum.EasingDirection[easingDirection] or Enum.EasingDirection.Out)
 	return TweenService:Create(object, tweenInfo, properties)
 end
 
+
 function Utility:lookBeforeChildOfObject(indexFromLoop, object, specifiedObjectName)
-	local Object = object:GetChildren()[indexFromLoop-1]
-	return Object and Object.Name == specifiedObjectName, Object
+	local children = object:GetChildren()
+	local targetObject = children[indexFromLoop - 1]
+	return targetObject and targetObject.Name == specifiedObjectName, targetObject
 end
 
 function Utility:validateOptions(options, defaults)
@@ -26,12 +28,14 @@ function Utility:validateContext(context)
 	assert(type(context) == "table", "Expected context to be a table")
 
 	for key, tbl in pairs(context) do
-		assert(typeof(tbl.Value) == tbl.ExpectedType, "Expected '" .. key .. "' to be a " .. tbl.ExpectedType)
+		local valueType = typeof(tbl.Value)
+		assert(valueType == tbl.ExpectedType, "Expected '" .. key .. "' to be a " .. tbl.ExpectedType .. ", but got " .. valueType)
 		context[key] = tbl.Value
 	end 
 
 	return context
 end
+
 
 function Utility:getTransparentObjects(objects: Instance)
 	local TransparentObjects = {}
