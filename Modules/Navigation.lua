@@ -32,7 +32,6 @@ function Navigation:selectTab()
 	end
 
 	local function tweenTabs()
-		-- Reduce loop calls by checking the active tab only
 		for _, tab in ipairs(self.ScrollingFrame:GetChildren()) do
 			if string.match(tab.Name, "Tab") then
 				self.tweenTabsOff(tab)
