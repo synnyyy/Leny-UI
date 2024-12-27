@@ -1,8 +1,11 @@
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
+Library.Theme = Theme
+
 local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
-ScreenGui.Enabled = false
+ScreenGui.Glow.Visible = false
 
 if RunService:IsStudio() then
 	ScreenGui.Parent = game.StarterGui
@@ -61,8 +64,6 @@ local Modules = {
 }
 
 local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
-local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
-Library.Theme = Theme
 
 local Popups = ScreenGui.Popups
 
@@ -169,7 +170,7 @@ function Library.new(options)
 	Library.Theme.ScrollingBarImageColor = options.ScrollingBarImageColor
 	Library.Theme.Line = options.Line
 
-	ScreenGui.Enabled = true
+	ScreenGui.Glow.Visible = true
 	Title.Text = options.title
 	Glow.Size = UDim2.fromOffset(options.sizeX, options.sizeY)
 end
@@ -1662,7 +1663,7 @@ function Library:createManager(options: table)
 		text = "Hide UI", 
 		default = "Insert",
 		callback = function()
-			ScreenGui.Enabled = not ScreenGui.Enabled
+			ScreenGui.Glow.Visible = not ScreenGui.Glow.Visible
 		end,
 	})
 
