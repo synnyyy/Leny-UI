@@ -19,7 +19,7 @@ Theme:registerToObjects({
 
 if IsOnMobile then
 	local UIScale = Instance.new("UIScale", ScreenGui.Glow)
-	UIScale.Scale = 0.5
+	UIScale.Scale = 0.675
 end
 
 ScreenGui.Parent = cloneref(game:GetService("CoreGui"))
