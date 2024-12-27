@@ -1,3 +1,5 @@
+local UserInputService = cloneref(game:GetService("UserInputService"))
+
 local Slider = {}
 Slider.__index = Slider
 
@@ -17,7 +19,6 @@ function Slider.new(context: table)
 end
 
 function Slider:handleSlider(connections)
-	local UserInputService = game:GetService("UserInputService")
 	
 	local function round(number: number)
 		-- credits to waves5217 for this function
