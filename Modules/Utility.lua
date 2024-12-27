@@ -78,13 +78,8 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
     local eventNameToEnableDrag = "InputBegan"
 
     local function update(input)
-        if typeof(dragStartPosition) == "Vector2" then
-            input = Vector2.new(input.Position.X, input.Position.Y)
-        else
-            input = input.Position
-        end
-
-        local delta = input - dragStartPosition
+        local inputPosition = input.UserInputType == Enum.UserInputType.Touch and input.Position or UserInputService:GetMouseLocation()
+        local delta = inputPosition - dragStartPosition
         callback(delta, ui, currentUIPosition, currentUISizeForUIResizing)
     end
 
@@ -99,7 +94,7 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
         end
     end
 
-    local enableDrag = function(input)
+    local function enableDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             setInitialPositionsAndSize(input.Position)
         end
@@ -107,7 +102,6 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
 
     if ui.ClassName == "TextButton" then
         eventNameToEnableDrag = "MouseButton1Down"
-
         enableDrag = function()
             setInitialPositionsAndSize(UserInputService:GetMouseLocation())
         end
@@ -125,7 +119,7 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
             update(input)
         end
     end
-    
+
     table.insert(library.Connections, ui[eventNameToEnableDrag]:Connect(enableDrag))
     table.insert(library.Connections, UserInputService.InputChanged:Connect(handleUpdate))
     table.insert(library.Connections, UserInputService.InputEnded:Connect(disableDrag))
