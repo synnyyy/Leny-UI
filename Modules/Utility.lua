@@ -4,10 +4,9 @@ local TweenService = cloneref(game:GetService("TweenService"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function Utility:tween(object, properties, duration, easingStyle, easingDirection)
-	local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle[easingStyle] or Enum.EasingStyle.Circular, Enum.EasingDirection[easingDirection] or Enum.EasingDirection.Out)
+	local tweenInfo = TweenInfo.new(duration or 0.15, Enum.EasingStyle[easingStyle or "Circular"], Enum.EasingDirection[easingDirection or "Out"])
 	return TweenService:Create(object, tweenInfo, properties)
 end
-
 
 function Utility:lookBeforeChildOfObject(indexFromLoop, object, specifiedObjectName)
 	local children = object:GetChildren()
