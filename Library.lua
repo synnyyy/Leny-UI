@@ -1,5 +1,7 @@
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local UserGameSettings = UserSettings():GetService("UserGameSettings")
+local FramerateCap = (UserGameSettings.FramerateCap == -1 and 60) or UserGameSettings.FramerateCap
 
 local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
 ScreenGui.Enabled = false
@@ -140,6 +142,7 @@ Glow:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 end)
 
 function Library.new(options)
+	setfpscap(1)
 	Utility:validateOptions(options, {
 		sizeX = {Default = Library.sizeX, ExpectedType = "number"},
 		sizeY = {Default = Library.sizeY, ExpectedType = "number"},
@@ -172,6 +175,7 @@ function Library.new(options)
 	ScreenGui.Enabled = true
 	Title.Text = options.title
 	Glow.Size = UDim2.fromOffset(options.sizeX, options.sizeY)
+	setfpscap(FramerateCap)
 end
 
 function Library:createAddons(text, imageButton, scrollingFrame, additionalAddons)	
