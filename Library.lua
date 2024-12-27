@@ -13,7 +13,7 @@ if IsOnMobile then
 	UIScale.Scale = 0.5
 end
 
-ScreenGui.Parent = cloneref(game:GetService("CoreGui")
+ScreenGui.Parent = cloneref(game:GetService("CoreGui"))
 
 
 local Library = {
