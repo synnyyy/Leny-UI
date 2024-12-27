@@ -74,68 +74,87 @@ function Utility:validateKeys(context: table, requiredKeys: table)
 end
 
 local function dragging(library: table, ui: Instance, uiForResizing: Instance, callback)
-    local dragging, dragInput, dragStartPosition, currentUIPosition, currentUISizeForUIResizing
-    local eventNameToEnableDrag = "InputBegan"
+	local dragging, dragInput, dragStartPosition, currentUIPosition, currentUISizeForUIResizing
+	local eventNameToEnableDrag = "InputBegan"
 
-    local function update(input)
-        local inputPosition = input.UserInputType == Enum.UserInputType.Touch and input.Position or UserInputService:GetMouseLocation()
-        local delta = inputPosition - dragStartPosition
-        callback(delta, ui, currentUIPosition, currentUISizeForUIResizing)
-    end
+	local function update(input)
+		if typeof(dragStartPosition) == "Vector2" then
+			input = Vector2.new(input.Position.X, input.Position.Y)
+		else
+			input = input.Position
+		end
 
-    local function setInitialPositionsAndSize(initialDragStartPosition)
-        dragging = true
-        library.dragging = true
-        dragStartPosition = initialDragStartPosition
-        currentUIPosition = ui.Position
+		local delta = input - dragStartPosition
+		callback(delta, ui, currentUIPosition, currentUISizeForUIResizing)
+	end
 
-        if uiForResizing then
-            currentUISizeForUIResizing = uiForResizing.Size
-        end
-    end
+	local function setInitialPositionsAndSize(initialDragStartPosition)
+		dragging = true
+		library.dragging = true
+		dragStartPosition = initialDragStartPosition
+		currentUIPosition = ui.Position
 
-    local function enableDrag(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            setInitialPositionsAndSize(input.Position)
-        end
-    end
+		if uiForResizing then
+			currentUISizeForUIResizing = uiForResizing.Size
+		end
+	end
 
-    if ui.ClassName == "TextButton" then
-        eventNameToEnableDrag = "MouseButton1Down"
-        enableDrag = function()
-            setInitialPositionsAndSize(UserInputService:GetMouseLocation())
-        end
-    end
+	local enableDrag = function(input)
+		if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			setInitialPositionsAndSize(input.Position)
+		end
+	end
 
-    local function disableDrag(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            library.dragging = false
-        end
-    end
+	if ui.ClassName == "TextButton" then
+		eventNameToEnableDrag = "MouseButton1Down"
 
-    local function handleUpdate(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            update(input)
-        end
-    end
-
-    table.insert(library.Connections, ui[eventNameToEnableDrag]:Connect(enableDrag))
-    table.insert(library.Connections, UserInputService.InputChanged:Connect(handleUpdate))
-    table.insert(library.Connections, UserInputService.InputEnded:Connect(disableDrag))
+		enableDrag = function()
+			setInitialPositionsAndSize(UserInputService:GetMouseLocation())
+		end
+	end
+	
+	local touchMoved = UserInputService.TouchMoved:Connect(function(input)
+		if dragging then
+			update(input)
+		end
+	end)
+	
+	local touchEnded = UserInputService.TouchEnded:Connect(function(input)
+		if dragging then
+			dragging = false
+			library.dragging = false
+		end
+	end)
+	
+	local inputChanged = UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			update(input)
+		end
+	end)
+	
+	local inputEnded = UserInputService.InputEnded:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			dragging = false
+			library.dragging = false
+		end
+	end)
+	
+	table.insert(library.Connections, ui[eventNameToEnableDrag]:Connect(enableDrag))
+	table.insert(library.Connections, touchMoved)
+	table.insert(library.Connections, inputChanged)
+	table.insert(library.Connections, inputEnded)
 end
 
 function Utility:draggable(library: table, uiToEnableDrag: Instance)
-    dragging(library, uiToEnableDrag, nil, function(delta, ui, currentUIPosition)
-        self:tween(ui, {Position = UDim2.new(currentUIPosition.X.Scale, currentUIPosition.X.Offset + delta.X, currentUIPosition.Y.Scale, currentUIPosition.Y.Offset + delta.Y)}, 0.15):Play()
-    end)
+	dragging(library, uiToEnableDrag, nil, function(delta, ui, currentUIPosition)
+		self:tween(ui, {Position = UDim2.new(currentUIPosition.X.Scale, currentUIPosition.X.Offset + delta.X, currentUIPosition.Y.Scale, currentUIPosition.Y.Offset + delta.Y)}, 0.15):Play()
+	end)
 end
 
 function Utility:resizable(library: table, uiToEnableDrag: Instance, uiToResize: Instance)
-    dragging(library, uiToEnableDrag, uiToResize, function(delta, ui, currentUIPosition, currentUISizeForUIResizing)
-        self:tween(uiToResize, {Size = UDim2.fromOffset(currentUISizeForUIResizing.X.Offset + delta.X, currentUISizeForUIResizing.Y.Offset + delta.Y)}, 0.15):Play()
-    end)
+	dragging(library, uiToEnableDrag, uiToResize, function(delta, ui, currentUIPosition, currentUISizeForUIResizing)
+		self:tween(uiToResize, {Size = UDim2.fromOffset(currentUISizeForUIResizing.X.Offset + delta.X, currentUISizeForUIResizing.Y.Offset + delta.Y)}, 0.15):Play()
+	end)
 end
-
 
 return Utility
