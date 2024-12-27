@@ -20,16 +20,19 @@ function Navigation:selectTab()
 
 	local function showPage()
 		for _, page in ipairs(self.Pages:GetChildren()) do
-			if string.match(page.Name, "Page") then
+			if string.match(page.Name, "Page") and page.Visible then
 				page.Visible = false
 			end
 		end
 
 		self.Page.Visible = true
-		self.animation()
+		if self.animation then
+			self.animation()
+		end
 	end
 
 	local function tweenTabs()
+		-- Reduce loop calls by checking the active tab only
 		for _, tab in ipairs(self.ScrollingFrame:GetChildren()) do
 			if string.match(tab.Name, "Tab") then
 				self.tweenTabsOff(tab)
@@ -50,7 +53,7 @@ function Navigation:selectTab()
 		showPage()
 		tweenTabs()
 
-		isSwitching = false
+		task.defer(function() isSwitching = false end)
 	end
 end
 
@@ -61,11 +64,16 @@ function Navigation:hoverEffect(isHovering)
 		end
 
 		if isHovering then
-			self.hoverOn()
+			if self.hoverOn then
+				self.hoverOn()
+			end
 		else
-			self.hoverOff()
+			if self.hoverOff then
+				self.hoverOff()
+			end
 		end
 	end
 end
+
 
 return Navigation
