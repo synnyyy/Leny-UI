@@ -1,7 +1,7 @@
 local Utility = {}
 
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local TweenService = cloneref(game:GetService("TweenService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function Utility:tween(object, properties, duration, easingStyle, easingDirection)
 	local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle[easingStyle] or Enum.EasingStyle.Circular, Enum.EasingDirection[easingDirection] or Enum.EasingDirection.Out)
