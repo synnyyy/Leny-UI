@@ -17,11 +17,6 @@ Theme:registerToObjects({
 	{object = ScreenGui.Loading, property = "BackgroundColor3", theme = {"PrimaryColor"}},
 }, "Loader")
 
-if IsOnMobile then
-	local UIScale = Instance.new("UIScale", ScreenGui.Glow)
-	UIScale.Scale = 0.675
-end
-
 ScreenGui.Parent = cloneref(game:GetService("CoreGui"))
 
 local Library = {
