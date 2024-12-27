@@ -1491,7 +1491,7 @@ end
 function Library:createManager(options: table)
 	Utility:validateOptions(options, {
 		folderName = {Default = "Leny", ExpectedType = "string"},
-		icon = {Default = "124718082122263", ExpectedType = "string"}
+		icon = {Default = "6031280882", ExpectedType = "string"}
 	})
 
 	local function getJsons() 
@@ -1623,7 +1623,7 @@ function Library:createManager(options: table)
 		end
 	end
 
-	local UI = Library:createTab({text = "UI", icon = options.icon})
+	local UI = Library:createTab({text = "Settings", icon = options.icon})
 	local Page = UI:createSubTab({text = "Page 1"})
 	local UI = Page:createSection({text = "UI"})
 	local SaveManager = Page:createSection({position = "Right", text = "Save Manager"})
