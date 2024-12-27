@@ -1,6 +1,9 @@
 local Keybind = {}
 Keybind.__index = Keybind
 
+local UserInputService = cloneref(game:GetService("UserInputService"))
+local RunService = cloneref(game:GetService("RunService"))
+
 function Keybind.new(context: table)
 	local self = setmetatable(context, Keybind)
 
@@ -14,8 +17,6 @@ function Keybind.new(context: table)
 end
 
 function Keybind:handleKeybind()
-	local UserInputService = game:GetService("UserInputService")
-	local RunService = game:GetService("RunService")
 
 	local changingBind = false
 
