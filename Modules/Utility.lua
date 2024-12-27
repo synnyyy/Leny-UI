@@ -100,7 +100,7 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
 	end
 
 	local enableDrag = function(input)
-		if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			setInitialPositionsAndSize(input.Position)
 		end
 	end
@@ -133,7 +133,7 @@ local function dragging(library: table, ui: Instance, uiForResizing: Instance, c
 	end)
 	
 	local inputEnded = UserInputService.InputEnded:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
 			dragging = false
 			library.dragging = false
 		end
