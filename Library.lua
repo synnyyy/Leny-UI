@@ -67,7 +67,7 @@ local Modules = {
 	ColorPicker = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/ColorPicker.lua", true))(),
 }
 
-local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/L3nyFromV3rm/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
+local Utility = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Utility.lua", true))()
 local Theme = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
 Library.Theme = Theme
 
