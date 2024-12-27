@@ -13,11 +13,8 @@ if IsOnMobile then
 	UIScale.Scale = 0.5
 end
 
-if RunService:IsStudio() then
-	ScreenGui.Parent = game.StarterGui
-else
-	ScreenGui.Parent = cloneref(game.CoreGui)
-end
+ScreenGui.Parent = cloneref(game:GetService("CoreGui")
+
 
 local Library = {
 	sizeX = 800,
