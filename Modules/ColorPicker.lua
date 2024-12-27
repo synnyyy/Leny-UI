@@ -3,7 +3,7 @@
 local ColorPicker = {}
 ColorPicker.__index = ColorPicker
 
-local UserInputService = game:GetService("UserInputService")
+local UserInputService = cloneref(game:GetService("UserInputService"))
 
 function ColorPicker.new(context: table)
 	local self = setmetatable(context, ColorPicker)
