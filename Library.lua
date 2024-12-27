@@ -1,7 +1,10 @@
 local Theme = loadstring(game:HttpGet("https://raw.githubusercontent.com/synnyyy/Leny-UI/refs/heads/main/Modules/Theme.lua", true))()
 
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local TextService = cloneref(game:GetService("TextService"))
+local HttpService = cloneref(game:GetService("HttpService"))
+local RunService = cloneref(game:GetService("RunService"))
+local UserInputService = cloneref(game:GetService("UserInputService"))
+
 local IsOnMobile = table.find({
 	Enum.Platform.IOS,
 	Enum.Platform.Android
@@ -471,7 +474,6 @@ function Library:createSubTab(options: table)
 	SubTab.TextColor3 = Theme.SecondaryTextColor
 	SubTab.Parent = ScrollingFrame
 
-	local TextService = game:GetService("TextService")
 	SubTab.Size = UDim2.new(0, TextService:GetTextSize(options.text, 15, Enum.Font.MontserratMedium, SubTab.AbsoluteSize).X, 1, 0)
 
 	-- Calculate subTab position to position underline
@@ -1578,7 +1580,7 @@ function Library:createManager(options: table)
 	end
 	
 	local function loadSaveConfig(fileName: string)
-		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. fileName .. ".json"))
+		local decoded = HttpService:JSONDecode(readfile(options.folderName .. "/" .. fileName .. ".json"))
 	
 		for elementType, elementData in pairs(shared.Flags) do
 			for elementName, _ in pairs(elementData) do
@@ -1610,7 +1612,7 @@ function Library:createManager(options: table)
 	end
 	
 	local function loadThemeConfig(fileName: string)
-		local decoded = game:GetService("HttpService"):JSONDecode(readfile(options.folderName .. "/" .. "Theme/" .. fileName .. ".json"))
+		local decoded = HttpService:JSONDecode(readfile(options.folderName .. "/" .. "Theme/" .. fileName .. ".json"))
 	
 		for elementType, elementData in pairs(shared.Flags) do
 			for elementName, _ in pairs(elementData) do
@@ -1732,7 +1734,7 @@ function Library:createManager(options: table)
 
 	SaveManager:createButton({text = "Create Config", callback = function()
 		local SavedData = getSavedData()
-		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		local encoded = HttpService:JSONEncode(SavedData)
 		writefile(options.folderName .. "/" .. configName:getText() .. ".json", encoded)
 		
 		if shared.Flags.Dropdown["Configs"] then
@@ -1744,7 +1746,7 @@ function Library:createManager(options: table)
 
 	SaveManager:createButton({text = "Save/Overwrite Config", callback = function()
 		local SavedData = getSavedData()
-		local encoded = game:GetService("HttpService"):JSONEncode(SavedData)
+		local encoded = HttpService:JSONEncode(SavedData)
 		writefile(options.folderName .. "/" .. Configs:getValue() .. ".json", encoded)
 		Configs:updateList({list = getJsons(), default = {Configs:getValue()}})
 	end,})
@@ -1774,7 +1776,7 @@ function Library:createManager(options: table)
 		text = "Create Theme Config", 
 		callback = function()
 			local ThemeData = getThemeData()
-			local encoded = game:GetService("HttpService"):JSONEncode(ThemeData)
+			local encoded = HttpService:JSONEncode(ThemeData)
 			writefile(options.folderName .. "/" .. "Theme/" .. themeConfigName:getText() .. ".json", encoded)
 
 			if shared.Flags.Dropdown["Theme Configs"] then
@@ -1792,7 +1794,7 @@ function Library:createManager(options: table)
 		text = "Save Theme Config", 
 		callback = function()
 			local ThemeData = getThemeData()
-			local encoded = game:GetService("HttpService"):JSONEncode(ThemeData)
+			local encoded = HttpService:JSONEncode(ThemeData)
 			writefile(options.folderName .. "/" .. "Theme/" .. ThemeConfigs:getValue() .. ".json", encoded)
 			ThemeConfigs:updateList({list = getThemeJsons(), default = {ThemeConfigs:getValue()}})
 		end
