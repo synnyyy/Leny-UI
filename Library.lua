@@ -1,8 +1,17 @@
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local IsOnMobile = table.find({
+	Enum.Platform.IOS,
+	Enum.Platform.Android
+}, UserInputService:GetPlatform())
 
 local ScreenGui = game:GetObjects("rbxassetid://99852798675591")[1]
 ScreenGui.Enabled = false
+
+if IsOnMobile then
+	local UISize = Instance.new("UIScale", ScreenGui.Glow)
+	UIScale.Scale = 0.5
+end
 
 if RunService:IsStudio() then
 	ScreenGui.Parent = game.StarterGui
