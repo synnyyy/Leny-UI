@@ -8,7 +8,7 @@ function Toggle.new(context: table)
 end
 
 function Toggle:switch()	
-	return function()
+	return task.spawn(function()
 		self.state = not self.state
 
 		if self.state then
@@ -17,8 +17,9 @@ function Toggle:switch()
 			self.switchOff()			
 		end
 
+		
 		self.callback(self.state)
-	end
+	end)
 end
 
 function Toggle:updateState(options: table)
